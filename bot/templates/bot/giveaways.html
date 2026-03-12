@@ -40,6 +40,7 @@
                         Qoldi {% if sort == '-remaining' %}<i class="bi bi-sort-down"></i>{% elif sort == 'remaining' %}<i class="bi bi-sort-up"></i>{% endif %}
                     </a>
                 </th>
+                <th>Guruh</th>
                 <th>Olganlar</th>
                 <th>
                     <a href="?sort={% if sort == '-date' %}date{% else %}-date{% endif %}{% if query %}&q={{ query }}{% endif %}" style="color:inherit;text-decoration:none">
@@ -70,6 +71,13 @@
                         <span style="color:#71bafa;font-weight:600">{{ g.remaining_amount }}</span>
                     {% else %}
                         <span style="color:#708499">0</span>
+                    {% endif %}
+                </td>
+                <td style="font-size:0.85rem">
+                    {% if g.chat_title %}
+                        <span style="color:#e0e0e0">{{ g.chat_title|truncatechars:20 }}</span>
+                    {% else %}
+                        <span style="color:#708499">{{ g.chat_id }}</span>
                     {% endif %}
                 </td>
                 <td>
