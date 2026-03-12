@@ -205,7 +205,7 @@ def giveaways_list(request):
     }
     order_by = sort_map.get(sort, '-created_at')
 
-    giveaways = Giveaway.objects.select_related('creator').order_by(order_by)
+    giveaways = Giveaway.objects.select_related('creator').exclude(remaining_amount=0).order_by(order_by)
 
     if query:
         giveaways = giveaways.filter(
