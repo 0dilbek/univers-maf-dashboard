@@ -179,10 +179,18 @@
                         {% endif %}
                     </td>
                     <td style="color:#708499;font-size:0.82rem;white-space:nowrap">{{ tp.transfer.created_at|date:"d.m.Y H:i" }}</td>
-                    <td>
+                    <td style="white-space:nowrap">
                         <button class="tg-btn tg-btn-sm tg-btn-ghost" onclick="editPrice({{ tp.id }}, {{ tp.price }})" title="Narxni tahrirlash">
                             <i class="bi bi-pencil"></i>
                         </button>
+                        {% if tp.price > 0 %}
+                        <form method="post" action="{% url 'cancel_transfer_price' tp.id %}" style="display:inline" onsubmit="return confirm('Bu savdoni bekor qilmoqchimisiz?')">
+                            {% csrf_token %}
+                            <button type="submit" class="tg-btn tg-btn-sm" style="background:#3d1212;color:#f44336;border:1px solid #5a1a1a" title="Savdoni bekor qilish">
+                                <i class="bi bi-x-lg"></i>
+                            </button>
+                        </form>
+                        {% endif %}
                     </td>
                 </tr>
                 {% empty %}

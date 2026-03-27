@@ -414,3 +414,15 @@ def edit_transfer_price(request, price_id):
         else:
             messages.error(request, "Noto'g'ri narx kiritildi.")
     return redirect('sales')
+
+
+@login_required
+def cancel_transfer_price(request, price_id):
+    """Savdoni bekor qilish — narxni 0 ga tushiradi."""
+    tp = get_object_or_404(TransferPrice, id=price_id)
+    if request.method == 'POST':
+        tp.price = 0
+        tp.is_manual = True
+        tp.save()
+        messages.success(request, "Savdo bekor qilindi.")
+    return redirect('sales')

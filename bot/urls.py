@@ -19,4 +19,5 @@ urlpatterns = [
     path('games/<int:game_id>/', views.active_game_detail, name='active_game_detail'),
     path('sales/', views.sales_analytics, name='sales'),
     path('sales/edit/<int:price_id>/', views.edit_transfer_price, name='edit_transfer_price'),
+    path('sales/cancel/<int:price_id>/', views.cancel_transfer_price, name='cancel_transfer_price'),
 ]
