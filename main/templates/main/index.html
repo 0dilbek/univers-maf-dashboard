@@ -204,54 +204,92 @@
             gap: 1.5rem;
         }
 
-        .features-grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 2rem;
+        .top-players-section {
             margin-top: 6rem;
-            max-width: 1000px;
             width: 100%;
+            max-width: 900px;
         }
 
-        .feature-card {
-            background: var(--card-bg);
-            border: var(--card-border);
+        .top-players-section h2 {
+            font-size: 2.5rem;
+            color: var(--text-main);
+            margin-bottom: 3rem;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .top-players-section h2 span {
+            color: var(--gold);
+            text-shadow: var(--gold-glow);
+        }
+
+        .players-list {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .player-row {
+            display: flex;
+            align-items: center;
+            background: linear-gradient(90deg, rgba(255, 255, 255, 0.03), rgba(0, 0, 0, 0.3));
+            border: 1px solid rgba(212, 175, 55, 0.1);
             backdrop-filter: var(--glass-effect);
-            padding: 2.5rem 2rem;
-            border-radius: 8px;
-            text-align: left;
+            padding: 1rem 2rem;
+            border-radius: 12px;
             transition: all 0.3s ease;
         }
 
-        .feature-card:hover {
-            transform: translateY(-5px);
-            border-color: rgba(212, 175, 55, 0.5);
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5), inset 0 0 15px rgba(212, 175, 55, 0.05);
+        .player-row:hover {
+            transform: scale(1.02);
+            border-color: rgba(212, 175, 55, 0.4);
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.5), inset 0 0 10px rgba(212, 175, 55, 0.05);
         }
 
-        .feature-icon {
-            font-size: 2rem;
+        .player-rank {
+            font-size: 1.5rem;
+            font-weight: 800;
             color: var(--gold);
-            margin-bottom: 1.5rem;
+            width: 60px;
+            text-shadow: var(--gold-glow);
+            text-align: left;
         }
 
-        .feature-card h3 {
-            color: var(--text-main);
+        .player-name {
+            flex: 1;
             font-size: 1.2rem;
-            margin-bottom: 1rem;
-            letter-spacing: 1px;
+            font-weight: 600;
+            color: var(--text-main);
+            text-align: left;
+        }
+
+        .player-stats {
+            display: flex;
+            gap: 2.5rem;
+        }
+
+        .player-stat {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+        }
+
+        .player-stat-value {
+            font-size: 1.2rem;
+            font-weight: 800;
+            color: var(--gold-light);
+        }
+
+        .player-stat-label {
+            font-size: 0.8rem;
+            color: var(--text-muted);
             text-transform: uppercase;
         }
 
-        .feature-card p {
-            color: var(--text-muted);
-            font-size: 0.9rem;
-            line-height: 1.7;
-        }
+        .rank-1 .player-rank { color: #FFD700; font-size: 2rem; }
+        .rank-2 .player-rank { color: #C0C0C0; font-size: 1.8rem; }
+        .rank-3 .player-rank { color: #CD7F32; font-size: 1.6rem; }
 
-        @media (max-width: 992px) {
-            .features-grid { grid-template-columns: repeat(2, 1fr); }
-        }
 
         .vip-section {
             margin-top: 8rem;
@@ -366,8 +404,8 @@
 
         .circular-progress {
             position: relative;
-            width: 160px;
-            height: 160px;
+            width: 220px;
+            height: 220px;
             margin-bottom: 1.5rem;
         }
 
@@ -389,8 +427,8 @@
 
         .circular-progress circle.progress {
             stroke: var(--gold);
-            stroke-dasharray: 440; /* 2 * pi * 70 = ~440 */
-            stroke-dashoffset: 440;
+            stroke-dasharray: 630; /* 2 * pi * 100 = ~628 */
+            stroke-dashoffset: 630;
             transition: stroke-dashoffset 2s cubic-bezier(0.4, 0, 0.2, 1);
             filter: drop-shadow(0 0 5px rgba(212, 175, 55, 0.5));
         }
@@ -417,11 +455,16 @@
         @media (max-width: 768px) {
             h1 { font-size: 2.5rem; }
             nav { padding: 1rem; flex-direction: column; gap: 1rem; }
-            .features-grid { grid-template-columns: 1fr; }
             .actions { flex-direction: column; width: 100%; max-width: 300px; }
             .btn { width: 100%; text-align: center; }
             .vip-section { margin-top: 5rem; }
-            .vip-section h2 { font-size: 2rem; }
+            .vip-section h2, .top-players-section h2 { font-size: 2rem; }
+            .player-stats { gap: 1rem; }
+            .player-name { font-size: 1rem; }
+            .player-rank { width: 40px; font-size: 1.2rem; }
+            .rank-1 .player-rank { font-size: 1.5rem; }
+            .rank-2 .player-rank { font-size: 1.4rem; }
+            .rank-3 .player-rank { font-size: 1.3rem; }
         }
     </style>
 </head>
@@ -437,40 +480,22 @@
     </nav>
 
     <main>
-        <div class="hero-badge">Yangi Premium Avlod</div>
+        <div class="hero-badge">Yangi Universal Mafia</div>
         <h1>Haqiqiy Mafiya Tajribasiga Xush Kelibsiz</h1>
         <p class="subtitle">O'zingizni professional o'yinlar olamida sinab ko'ring. Univers Mafia bilan chegaralarni kengaytiring va shaxsiy statistikangizni boshqaring.</p>
         
         <div class="actions">
-            <a href="#vip" class="btn btn-gold">VIP Guruhlar</a>
-            <a href="#" class="btn btn-outline">Batafsil Ma'lumot</a>
-        </div>
-
-        <div class="features-grid">
-            <div class="feature-card">
-                <div class="feature-icon">✦</div>
-                <h3>Premium Status</h3>
-                <p>Kengaytirilgan imkoniyatlar va eksklyuziv xizmatlardan foydalanish uchun VIP darajaga kiring.</p>
-            </div>
-            <div class="feature-card">
-                <div class="feature-icon">♕</div>
-                <h3>Reyting Tizimi</h3>
-                <p>Eng yaxshilar ro'yxatida o'z o'rningizni toping. Professional o'yinchilar bilan bellashing.</p>
-            </div>
-            <div class="feature-card">
-                <div class="feature-icon">🛡</div>
-                <h3>To'liq Nazorat</h3>
-                <p>O'yinlaringizni, yutuqlaringizni va moliyaviy amaliyotlaringizni bitta panel orqali kuzating.</p>
-            </div>
+            <a href="#top" class="btn btn-gold">Top O'yinchilar</a>
+            <a href="#vip" class="btn btn-outline">VIP Guruhlar</a>
         </div>
 
         <section class="stats-section" id="stats">
             <div class="stats-grid">
                 <div class="stat-card">
                     <div class="circular-progress" data-target="{{ stats.users_count|default:0 }}">
-                        <svg viewBox="0 0 160 160">
-                            <circle class="bg" cx="80" cy="80" r="70"></circle>
-                            <circle class="progress" cx="80" cy="80" r="70"></circle>
+                        <svg viewBox="0 0 220 220">
+                            <circle class="bg" cx="110" cy="110" r="100"></circle>
+                            <circle class="progress" cx="110" cy="110" r="100"></circle>
                         </svg>
                         <div class="stat-value">0</div>
                     </div>
@@ -479,9 +504,9 @@
 
                 <div class="stat-card">
                     <div class="circular-progress" data-target="{{ stats.chats_count|default:0 }}">
-                        <svg viewBox="0 0 160 160">
-                            <circle class="bg" cx="80" cy="80" r="70"></circle>
-                            <circle class="progress" cx="80" cy="80" r="70"></circle>
+                        <svg viewBox="0 0 220 220">
+                            <circle class="bg" cx="110" cy="110" r="100"></circle>
+                            <circle class="progress" cx="110" cy="110" r="100"></circle>
                         </svg>
                         <div class="stat-value">0</div>
                     </div>
@@ -490,14 +515,38 @@
 
                 <div class="stat-card">
                     <div class="circular-progress" data-target="{{ stats.games_count|default:0 }}">
-                        <svg viewBox="0 0 160 160">
-                            <circle class="bg" cx="80" cy="80" r="70"></circle>
-                            <circle class="progress" cx="80" cy="80" r="70"></circle>
+                        <svg viewBox="0 0 220 220">
+                            <circle class="bg" cx="110" cy="110" r="100"></circle>
+                            <circle class="progress" cx="110" cy="110" r="100"></circle>
                         </svg>
                         <div class="stat-value">0</div>
                     </div>
                     <div class="stat-label">O'tkazilgan o'yinlar</div>
                 </div>
+            </div>
+        </section>
+
+        <section class="top-players-section" id="top">
+            <h2>Eng zo'r <span>O'yinchilar</span></h2>
+            <div class="players-list">
+                {% for player in top_players %}
+                <div class="player-row {% if forloop.counter <= 3 %}rank-{{ forloop.counter }}{% endif %}">
+                    <div class="player-rank">#{{ forloop.counter }}</div>
+                    <div class="player-name">{{ player.user.full_name|default:player.user.mention }}</div>
+                    <div class="player-stats">
+                        <div class="player-stat">
+                            <span class="player-stat-value">{{ player.wins }}</span>
+                            <span class="player-stat-label">G'alaba</span>
+                        </div>
+                        <div class="player-stat">
+                            <span class="player-stat-value">{{ player.games_count }}</span>
+                            <span class="player-stat-label">O'yin</span>
+                        </div>
+                    </div>
+                </div>
+                {% empty %}
+                <p class="empty-state">Hozircha o'yinchilar ro'yxati bo'sh.</p>
+                {% endfor %}
             </div>
         </section>
 
