@@ -82,15 +82,21 @@ def generate_group_link(request):
     try:
         chat = Chat.objects.get(chat_id=chat_id)
     except Chat.DoesNotExist:
-        # If chat doesn't exist in our DB yet, we might need to handle it or error
         return JsonResponse({'error': 'Chat not found'}, status=404)
 
-    # Create a new link valid for 24 hours
-    expires_at = timezone.now() + timedelta(days=1)
-    link = GroupStatsLink.objects.create(chat=chat, expires_at=expires_at)
+    # Check if there is an existing active link (not expired)
+    now = timezone.now()
+    active_link = GroupStatsLink.objects.filter(chat=chat, expires_at__gt=now).order_by('-expires_at').first()
+    
+    if active_link:
+        link = active_link
+    else:
+        # Create a new link valid for 24 hours
+        expires_at = now + timedelta(days=1)
+        link = GroupStatsLink.objects.create(chat=chat, expires_at=expires_at)
     
     url = request.build_absolute_uri(f'/group/{link.token}/')
-    return JsonResponse({'url': url, 'expires_at': expires_at.isoformat()})
+    return JsonResponse({'url': url, 'expires_at': link.expires_at.isoformat()})
 
 def group_stats(request, token):
     link = get_object_or_404(GroupStatsLink, token=token)
@@ -101,63 +107,76 @@ def group_stats(request, token):
     chat = link.chat
     period = request.GET.get('period', 'month') # day, week, month
     
-    now = timezone.now()
-    if period == 'day':
-        start_date = now.replace(hour=0, minute=0, second=0, microsecond=0)
-    elif period == 'week':
-        start_date = now - timedelta(days=now.weekday())
-        start_date = start_date.replace(hour=0, minute=0, second=0, microsecond=0)
-    else: # month
-        start_date = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+    # Try to get cached data for this group and period
+    cache_key = f'group_stats_{chat.chat_id}_{period}'
+    cached_data = cache.get(cache_key)
+    
+    if cached_data:
+        stats = cached_data['stats']
+        top_players = cached_data['top_players']
+    else:
+        now = timezone.now()
+        if period == 'day':
+            start_date = now.replace(hour=0, minute=0, second=0, microsecond=0)
+        elif period == 'week':
+            start_date = now - timedelta(days=now.weekday())
+            start_date = start_date.replace(hour=0, minute=0, second=0, microsecond=0)
+        else: # month
+            start_date = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
 
-    # Group specific stats
-    monthly_games = Game.objects.filter(chat=chat, created_at__gte=start_date)
-    games_count = monthly_games.count()
-    
-    # Participants in this group
-    participants_count = GamePlayer.objects.filter(game__chat=chat, game__created_at__gte=start_date).values('user_id').distinct().count()
-    
-    # Top participants for this group and period
-    game_player_qs = GamePlayer.objects.filter(game_id=OuterRef('game_id'))
-    total_players_subquery = Subquery(game_player_qs.values('game_id').annotate(c=Count('id')).values('c')[:1])
-    winners_count_subquery = Subquery(game_player_qs.filter(win=True).values('game_id').annotate(c=Count('id')).values('c')[:1])
-    extra_ball_subquery = Subquery(PlayersGameBall.objects.filter(player_id=OuterRef('id')).values('ball')[:1])
+        # Group specific stats
+        group_games = Game.objects.filter(chat=chat, created_at__gte=start_date)
+        games_count = group_games.count()
+        
+        # Participants in this group
+        participants_count = GamePlayer.objects.filter(game__chat=chat, game__created_at__gte=start_date).values('user_id').distinct().count()
+        
+        # Top participants calculation
+        game_player_qs = GamePlayer.objects.filter(game_id=OuterRef('game_id'))
+        total_players_subquery = Subquery(game_player_qs.values('game_id').annotate(c=Count('id')).values('c')[:1])
+        winners_count_subquery = Subquery(game_player_qs.filter(win=True).values('game_id').annotate(c=Count('id')).values('c')[:1])
+        extra_ball_subquery = Subquery(PlayersGameBall.objects.filter(player_id=OuterRef('id')).values('ball')[:1])
 
-    players_period = GamePlayer.objects.filter(game__chat=chat, game__created_at__gte=start_date).select_related('user')
-    
-    players_annotated = players_period.annotate(
-        game_total=Coalesce(total_players_subquery, 0),
-        game_winners=Coalesce(winners_count_subquery, 0),
-        extra=Coalesce(extra_ball_subquery, 0)
-    )
-    
-    players_with_delta = players_annotated.annotate(
-        delta=Case(
-            When(win=True, then=2 * F('game_total') - F('game_winners')),
-            default=-F('game_winners'),
-            output_field=IntegerField()
-        ) + F('extra')
-    )
-    
-    top_winners = players_with_delta.values('user__full_name', 'user__mention').annotate(
-        total_score=Coalesce(Sum('delta'), 0),
-        games_count=Count('game', distinct=True)
-    ).order_by('-total_score')[:50]
-    
-    top_players = []
-    for entry in top_winners:
-        top_players.append({
-            'user': {'full_name': entry['user__full_name'], 'mention': entry['user__mention']},
-            'score': entry['total_score'],
-            'games_count': entry['games_count'],
-        })
+        players_period = GamePlayer.objects.filter(game__chat=chat, game__created_at__gte=start_date).select_related('user')
+        
+        players_annotated = players_period.annotate(
+            game_total=Coalesce(total_players_subquery, 0),
+            game_winners=Coalesce(winners_count_subquery, 0),
+            extra=Coalesce(extra_ball_subquery, 0)
+        )
+        
+        players_with_delta = players_annotated.annotate(
+            delta=Case(
+                When(win=True, then=2 * F('game_total') - F('game_winners')),
+                default=-F('game_winners'),
+                output_field=IntegerField()
+            ) + F('extra')
+        )
+        
+        top_winners = players_with_delta.values('user__full_name', 'user__mention').annotate(
+            total_score=Coalesce(Sum('delta'), 0),
+            games_count=Count('game', distinct=True)
+        ).order_by('-total_score')[:50]
+        
+        top_players = []
+        for entry in top_winners:
+            top_players.append({
+                'user': {'full_name': entry['user__full_name'], 'mention': entry['user__mention']},
+                'score': entry['total_score'],
+                'games_count': entry['games_count'],
+            })
+        
+        stats = {
+            'games_count': games_count,
+            'participants_count': participants_count,
+        }
+        
+        # Cache for 30 minutes
+        cache.set(cache_key, {'stats': stats, 'top_players': top_players}, 1800)
 
     return render(request, 'main/group_stats.html', {
         'chat': chat,
-        'stats': {
-            'games_count': games_count,
-            'participants_count': participants_count,
-        },
+        'stats': stats,
         'top_players': top_players,
         'period': period,
         'token': token
