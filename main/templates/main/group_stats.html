@@ -84,7 +84,7 @@
         /* Stats Grid */
         .stats-grid {
             display: grid;
-            grid-template-columns: repeat(2, 1fr);
+            grid-template-columns: repeat(3, 1fr);
             gap: 1.5rem;
             width: 100%;
             margin-bottom: 3rem;
@@ -204,6 +204,10 @@
                 <span class="stat-value">{{ stats.games_count }}</span>
                 <span class="stat-label">O'tkazilgan o'yinlar</span>
             </div>
+            <div class="stat-card">
+                <span class="stat-value">{{ total_diamond }} 💎</span>
+                <span class="stat-label">Guruh hisobi</span>
+            </div>
         </div>
 
         <div class="top-players-section">
@@ -231,6 +235,27 @@
                 {% endfor %}
             </div>
         </div>
+        <div class="top-players-section" style="margin-top: 3rem;">
+            <h2 style="margin-bottom: 1.5rem; font-size: 1.2rem; text-transform: uppercase; letter-spacing: 2px;">O'tkazishlar tarixi</h2>
+            <div class="players-list">
+                {% for transfer in transfer_history %}
+                <div class="player-row">
+                    <div class="player-name">{{ transfer.user }}</div>
+                    <div class="player-stats">
+                        <div class="player-stat">
+                            <span class="player-stat-value">{{ transfer.amount }} 💎</span>
+                            <span class="player-stat-label">{{ transfer.created_at|date:"d.m.Y H:i" }}</span>
+                        </div>
+                    </div>
+                </div>
+                {% empty %}
+                <div class="stat-card" style="width: 100%; border-style: dashed;">
+                    <p style="color: var(--text-muted)">Hali hech kim olmos yubormagan.</p>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
     </div>
 </body>
 </html>

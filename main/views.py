@@ -4,7 +4,7 @@ from django.db.models import Sum, Count, F, Case, When, IntegerField, OuterRef, 
 from django.db.models.functions import Coalesce
 from django.core.cache import cache
 from django.http import JsonResponse
-from bot.models import VipChats, Chat, User, Game, Profile, GamePlayer, PlayersGameBall
+from bot.models import VipChats, Chat, User, Game, Profile, GamePlayer, PlayersGameBall, GroupIncome
 from .models import GroupStatsLink
 from datetime import timedelta
 import uuid
@@ -174,10 +174,27 @@ def group_stats(request, token):
         # Cache for 30 minutes
         cache.set(cache_key, {'stats': stats, 'top_players': top_players}, 1800)
 
+    total_diamond = GroupIncome.objects.filter(chat_id=chat.chat_id).aggregate(Sum('amount'))['amount__sum'] or 0
+    
+    recent_incomes = GroupIncome.objects.filter(chat_id=chat.chat_id).order_by('-created_at')[:50]
+    user_ids = [inc.user_id for inc in recent_incomes]
+    users_map = {u.user_id: u for u in User.objects.filter(user_id__in=user_ids)}
+    
+    transfer_history = []
+    for inc in recent_incomes:
+        u = users_map.get(inc.user_id)
+        transfer_history.append({
+            'user': u.full_name if u and u.full_name else (u.mention if u else f"ID: {inc.user_id}"),
+            'amount': inc.amount,
+            'created_at': inc.created_at
+        })
+
     return render(request, 'main/group_stats.html', {
         'chat': chat,
         'stats': stats,
         'top_players': top_players,
         'period': period,
-        'token': token
+        'token': token,
+        'total_diamond': total_diamond,
+        'transfer_history': transfer_history
     })

@@ -203,5 +203,24 @@
         </div>
     </div>
     {% endif %}
+
+    {% if incomes_data %}
+    <div class="col-12">
+        <div class="tg-card">
+            <div class="tg-card-header"><div class="title"><i class="bi bi-gem" style="color:#71bafa"></i> Guruhlarga tashlangan olmoslar</div></div>
+            <div class="tg-table-wrap"><table class="tg-table">
+                <thead><tr><th>Guruh</th><th>Olmos</th></tr></thead>
+                <tbody>
+                    {% for inc in incomes_data %}
+                    <tr>
+                        <td>{{ inc.chat_title }}</td>
+                        <td style="font-weight:600;color:#71bafa">{{ inc.total }} 💎</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table></div>
+        </div>
+    </div>
+    {% endif %}
 </div>
 {% endblock %}

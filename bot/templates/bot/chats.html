@@ -16,9 +16,11 @@
             {% if query or type_filter %}<a href="{% url 'chats' %}" class="tg-btn tg-btn-ghost" style="white-space:nowrap">Tozalash</a>{% endif %}
         </form>
         <div class="filter-tabs">
+            <a href="?sort=-diamond{% if query %}&q={{ query }}{% endif %}{% if type_filter %}&type={{ type_filter }}{% endif %}" class="filter-tab {% if sort == '-diamond' or not sort %}active{% endif %}">Eng ko'p olmos</a>
+            <a href="?sort=-created_at{% if query %}&q={{ query }}{% endif %}{% if type_filter %}&type={{ type_filter }}{% endif %}" class="filter-tab {% if sort == '-created_at' %}active{% endif %}">Yangi</a>
             <a href="{% url 'chats' %}{% if query %}?q={{ query }}{% endif %}" class="filter-tab {% if not type_filter %}active{% endif %}">Barchasi</a>
-            <a href="?type=group{% if query %}&q={{ query }}{% endif %}" class="filter-tab {% if type_filter == 'group' %}active{% endif %}">Guruh</a>
-            <a href="?type=supergroup{% if query %}&q={{ query }}{% endif %}" class="filter-tab {% if type_filter == 'supergroup' %}active{% endif %}">Supergroup</a>
+            <a href="?type=group{% if query %}&q={{ query }}{% endif %}{% if sort %}&sort={{ sort }}{% endif %}" class="filter-tab {% if type_filter == 'group' %}active{% endif %}">Guruh</a>
+            <a href="?type=supergroup{% if query %}&q={{ query }}{% endif %}{% if sort %}&sort={{ sort }}{% endif %}" class="filter-tab {% if type_filter == 'supergroup' %}active{% endif %}">Supergroup</a>
         </div>
     </div>
 </div>
@@ -26,7 +28,7 @@
 <div class="tg-card">
     <div class="tg-table-wrap"><table class="tg-table">
         <thead>
-            <tr><th>Chat</th><th>Chat ID</th><th>Tur</th><th>Invite link</th><th>Qo'shilgan</th></tr>
+            <tr><th>Chat</th><th>Chat ID</th><th>Tur</th><th>Olmos</th><th>Invite link</th><th>Qo'shilgan</th></tr>
         </thead>
         <tbody>
             {% for chat in chats %}
@@ -47,6 +49,7 @@
                     <span style="background:#1a2d1a;color:#4dbe68;padding:3px 10px;border-radius:20px;font-size:0.8rem;font-weight:600">Guruh</span>
                     {% endif %}
                 </td>
+                <td><span style="color:#71bafa;font-weight:bold">{{ chat.total_diamond }} 💎</span></td>
                 <td>
                     {% if chat.invite_link %}
                     <a href="{{ chat.invite_link }}" target="_blank" style="font-size:0.82rem">
@@ -59,7 +62,7 @@
                 <td style="color:#708499;font-size:0.82rem">{{ chat.created_at|date:"d.m.Y H:i" }}</td>
             </tr>
             {% empty %}
-            <tr><td colspan="5" style="text-align:center;color:#708499;padding:32px">Chat topilmadi</td></tr>
+            <tr><td colspan="6" style="text-align:center;color:#708499;padding:32px">Chat topilmadi</td></tr>
             {% endfor %}
         </tbody>
     </table></div>

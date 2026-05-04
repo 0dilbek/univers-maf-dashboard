@@ -7,7 +7,7 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.utils import timezone
 
-from .models import User, BlockedUser, Profile, Transfer, VipUser, Para, Geroy, Chat, Giveaway, Game, GamePlayer, GamePhase, DiamondBuyStars, TransferPrice
+from .models import User, BlockedUser, Profile, Transfer, VipUser, Para, Geroy, Chat, Giveaway, Game, GamePlayer, GamePhase, DiamondBuyStars, TransferPrice, GroupIncome
 
 
 @login_required
@@ -85,6 +85,19 @@ def user_detail(request, user_id):
         'transfers_received': transfers_received,
         'pairs': pairs,
     }
+
+    user_incomes = GroupIncome.objects.filter(user_id=user.user_id).values('chat_id').annotate(total=Sum('amount')).filter(total__gt=0).order_by('-total')
+    chat_ids = [inc['chat_id'] for inc in user_incomes]
+    chats_map = {chat.chat_id: chat for chat in Chat.objects.filter(chat_id__in=chat_ids)}
+    incomes_data = []
+    for inc in user_incomes:
+        c = chats_map.get(inc['chat_id'])
+        incomes_data.append({
+            'chat_title': c.title if c else f"Guruh {inc['chat_id']}",
+            'total': inc['total']
+        })
+    context['incomes_data'] = incomes_data
+
     return render(request, 'bot/user_detail.html', context)
 
 
@@ -230,20 +243,31 @@ def giveaways_list(request):
 
 @login_required
 def chats_list(request):
+    from django.db.models.functions import Coalesce
     query = request.GET.get('q', '')
     type_filter = request.GET.get('type', '')
-    chats = Chat.objects.order_by('-created_at')
+    sort = request.GET.get('sort', '-diamond')
+    
+    income_subquery = GroupIncome.objects.filter(chat_id=OuterRef('chat_id')).values('chat_id').annotate(total=Sum('amount')).values('total')
+    chats = Chat.objects.annotate(total_diamond=Coalesce(Subquery(income_subquery), 0))
 
     if query:
         chats = chats.filter(Q(title__icontains=query) | Q(chat_id__icontains=query))
     if type_filter:
         chats = chats.filter(type=type_filter)
+        
+    if sort == 'diamond':
+        chats = chats.order_by('total_diamond')
+    elif sort == '-diamond':
+        chats = chats.order_by('-total_diamond')
+    else:
+        chats = chats.order_by('-created_at')
 
     paginator = Paginator(chats, 50)
     page = request.GET.get('page')
     chats = paginator.get_page(page)
 
-    return render(request, 'bot/chats.html', {'chats': chats, 'query': query, 'type_filter': type_filter})
+    return render(request, 'bot/chats.html', {'chats': chats, 'query': query, 'type_filter': type_filter, 'sort': sort})
 
 
 @login_required
