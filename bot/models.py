@@ -416,3 +416,18 @@ class VipChats(models.Model):
 
     def __str__(self):
         return f"VIP Chat: {self.chat_id}"
+
+
+class ChatMemberCount(models.Model):
+    id = models.BigAutoField(primary_key=True)
+    chat = models.ForeignKey(Chat, related_name="member_counts", on_delete=models.CASCADE)
+    count = models.IntegerField()
+    date = models.DateField(auto_now_add=True)
+
+    class Meta:
+        db_table = "chatmembercount"
+        managed = False
+        unique_together = (("chat", "date"),)
+
+    def __str__(self):
+        return f"{self.chat_id} — {self.count} ({self.date})"

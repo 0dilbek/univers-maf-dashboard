@@ -7,7 +7,7 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.utils import timezone
 
-from .models import User, BlockedUser, Profile, Transfer, VipUser, Para, Geroy, Chat, Giveaway, Game, GamePlayer, GamePhase, DiamondBuyStars, TransferPrice, GroupIncome
+from .models import User, BlockedUser, Profile, Transfer, VipUser, Para, Geroy, Chat, Giveaway, Game, GamePlayer, GamePhase, DiamondBuyStars, TransferPrice, GroupIncome, ChatMemberCount
 
 
 @login_required
@@ -251,7 +251,16 @@ def chats_list(request):
     game_filter = request.GET.get('game_date', '')
 
     income_subquery = GroupIncome.objects.filter(chat_id=OuterRef('chat_id')).values('chat_id').annotate(total=Sum('amount')).values('total')
-    chats = Chat.objects.annotate(total_diamond=Coalesce(Subquery(income_subquery), 0))
+    latest_member_count_sq = (
+        ChatMemberCount.objects
+        .filter(chat=OuterRef('pk'))
+        .order_by('-date')
+        .values('count')[:1]
+    )
+    chats = Chat.objects.annotate(
+        total_diamond=Coalesce(Subquery(income_subquery), 0),
+        latest_member_count=Subquery(latest_member_count_sq),
+    )
 
     if query:
         chats = chats.filter(Q(title__icontains=query) | Q(chat_id__icontains=query))
@@ -282,7 +291,11 @@ def chats_list(request):
     elif game_filter == 'this_month':
         chats = chats.filter(games__created_at__year=now.year, games__created_at__month=now.month).distinct()
 
-    if sort == 'diamond':
+    if sort == 'members':
+        chats = chats.filter(latest_member_count__isnull=False).order_by('latest_member_count')
+    elif sort == '-members':
+        chats = chats.filter(latest_member_count__isnull=False).order_by('-latest_member_count')
+    elif sort == 'diamond':
         chats = chats.order_by('total_diamond')
     elif sort == '-diamond':
         chats = chats.order_by('-total_diamond')
