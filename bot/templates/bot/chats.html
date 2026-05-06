@@ -7,21 +7,85 @@
     <p>Jami {{ chats.paginator.count }} ta chat</p>
 </div>
 
-<div class="tg-card mb-4" style="padding:14px 16px">
+<div class="tg-card mb-3" style="padding:14px 16px">
     <div class="d-flex gap-2 flex-wrap align-items-center">
         <form class="d-flex gap-2 flex-grow-1" method="get">
             <input type="text" name="q" class="tg-search" placeholder="Nomi yoki Chat ID bo'yicha qidirish..." value="{{ query }}">
             {% if type_filter %}<input type="hidden" name="type" value="{{ type_filter }}">{% endif %}
+            {% if sort %}<input type="hidden" name="sort" value="{{ sort }}">{% endif %}
+            {% if date_filter %}<input type="hidden" name="date" value="{{ date_filter }}">{% endif %}
+            {% if game_filter %}<input type="hidden" name="game_date" value="{{ game_filter }}">{% endif %}
             <button type="submit" class="tg-btn" style="white-space:nowrap"><i class="bi bi-search me-1"></i>Qidirish</button>
-            {% if query or type_filter %}<a href="{% url 'chats' %}" class="tg-btn tg-btn-ghost" style="white-space:nowrap">Tozalash</a>{% endif %}
+            {% if query or type_filter or date_filter or game_filter %}<a href="{% url 'chats' %}" class="tg-btn tg-btn-ghost" style="white-space:nowrap">Tozalash</a>{% endif %}
         </form>
+    </div>
+</div>
+
+<div class="tg-card mb-3" style="padding:10px 14px">
+    <div class="d-flex flex-wrap gap-2 align-items-center">
+
+        <!-- Sort -->
         <div class="filter-tabs">
-            <a href="?sort=-diamond{% if query %}&q={{ query }}{% endif %}{% if type_filter %}&type={{ type_filter }}{% endif %}" class="filter-tab {% if sort == '-diamond' or not sort %}active{% endif %}">Eng ko'p olmos</a>
-            <a href="?sort=-created_at{% if query %}&q={{ query }}{% endif %}{% if type_filter %}&type={{ type_filter }}{% endif %}" class="filter-tab {% if sort == '-created_at' %}active{% endif %}">Yangi</a>
-            <a href="{% url 'chats' %}{% if query %}?q={{ query }}{% endif %}" class="filter-tab {% if not type_filter %}active{% endif %}">Barchasi</a>
-            <a href="?type=group{% if query %}&q={{ query }}{% endif %}{% if sort %}&sort={{ sort }}{% endif %}" class="filter-tab {% if type_filter == 'group' %}active{% endif %}">Guruh</a>
-            <a href="?type=supergroup{% if query %}&q={{ query }}{% endif %}{% if sort %}&sort={{ sort }}{% endif %}" class="filter-tab {% if type_filter == 'supergroup' %}active{% endif %}">Supergroup</a>
+            <a href="?sort=-diamond{% if query %}&q={{ query }}{% endif %}{% if type_filter %}&type={{ type_filter }}{% endif %}{% if date_filter %}&date={{ date_filter }}{% endif %}{% if game_filter %}&game_date={{ game_filter }}{% endif %}"
+               class="filter-tab {% if sort == '-diamond' or not sort %}active{% endif %}">
+                <i class="bi bi-gem me-1"></i>Ko'p olmos
+            </a>
+            <a href="?sort=-created_at{% if query %}&q={{ query }}{% endif %}{% if type_filter %}&type={{ type_filter }}{% endif %}{% if date_filter %}&date={{ date_filter }}{% endif %}{% if game_filter %}&game_date={{ game_filter }}{% endif %}"
+               class="filter-tab {% if sort == '-created_at' %}active{% endif %}">
+                <i class="bi bi-arrow-down me-1"></i>Yangi
+            </a>
+            <a href="?sort=oldest{% if query %}&q={{ query }}{% endif %}{% if type_filter %}&type={{ type_filter }}{% endif %}{% if date_filter %}&date={{ date_filter }}{% endif %}{% if game_filter %}&game_date={{ game_filter }}{% endif %}"
+               class="filter-tab {% if sort == 'oldest' %}active{% endif %}">
+                <i class="bi bi-arrow-up me-1"></i>Eski
+            </a>
         </div>
+
+        <div style="width:1px;height:24px;background:#2d4a6b;margin:0 4px"></div>
+
+        <!-- Tur -->
+        <div class="filter-tabs">
+            <a href="?{% if query %}q={{ query }}&{% endif %}{% if sort %}sort={{ sort }}&{% endif %}{% if date_filter %}date={{ date_filter }}&{% endif %}{% if game_filter %}game_date={{ game_filter }}&{% endif %}"
+               class="filter-tab {% if not type_filter %}active{% endif %}">Barchasi</a>
+            <a href="?type=group{% if query %}&q={{ query }}{% endif %}{% if sort %}&sort={{ sort }}{% endif %}{% if date_filter %}&date={{ date_filter }}{% endif %}{% if game_filter %}&game_date={{ game_filter }}{% endif %}"
+               class="filter-tab {% if type_filter == 'group' %}active{% endif %}">Guruh</a>
+            <a href="?type=supergroup{% if query %}&q={{ query }}{% endif %}{% if sort %}&sort={{ sort }}{% endif %}{% if date_filter %}&date={{ date_filter }}{% endif %}{% if game_filter %}&game_date={{ game_filter }}{% endif %}"
+               class="filter-tab {% if type_filter == 'supergroup' %}active{% endif %}">Supergroup</a>
+        </div>
+
+        <div style="width:1px;height:24px;background:#2d4a6b;margin:0 4px"></div>
+
+        <!-- Yaratilish sanasi -->
+        <div style="font-size:0.78rem;color:#708499;white-space:nowrap">Yaratilgan:</div>
+        <div class="filter-tabs">
+            <a href="?{% if query %}q={{ query }}&{% endif %}{% if sort %}sort={{ sort }}&{% endif %}{% if type_filter %}type={{ type_filter }}&{% endif %}{% if game_filter %}game_date={{ game_filter }}&{% endif %}"
+               class="filter-tab {% if not date_filter %}active{% endif %}">Barchasi</a>
+            <a href="?date=today{% if query %}&q={{ query }}{% endif %}{% if sort %}&sort={{ sort }}{% endif %}{% if type_filter %}&type={{ type_filter }}{% endif %}{% if game_filter %}&game_date={{ game_filter }}{% endif %}"
+               class="filter-tab {% if date_filter == 'today' %}active{% endif %}">Bugun</a>
+            <a href="?date=yesterday{% if query %}&q={{ query }}{% endif %}{% if sort %}&sort={{ sort }}{% endif %}{% if type_filter %}&type={{ type_filter }}{% endif %}{% if game_filter %}&game_date={{ game_filter }}{% endif %}"
+               class="filter-tab {% if date_filter == 'yesterday' %}active{% endif %}">Kecha</a>
+            <a href="?date=this_week{% if query %}&q={{ query }}{% endif %}{% if sort %}&sort={{ sort }}{% endif %}{% if type_filter %}&type={{ type_filter }}{% endif %}{% if game_filter %}&game_date={{ game_filter }}{% endif %}"
+               class="filter-tab {% if date_filter == 'this_week' %}active{% endif %}">Shu hafta</a>
+            <a href="?date=this_month{% if query %}&q={{ query }}{% endif %}{% if sort %}&sort={{ sort }}{% endif %}{% if type_filter %}&type={{ type_filter }}{% endif %}{% if game_filter %}&game_date={{ game_filter }}{% endif %}"
+               class="filter-tab {% if date_filter == 'this_month' %}active{% endif %}">Shu oy</a>
+        </div>
+
+        <div style="width:1px;height:24px;background:#2d4a6b;margin:0 4px"></div>
+
+        <!-- O'yin sanasi -->
+        <div style="font-size:0.78rem;color:#708499;white-space:nowrap"><i class="bi bi-controller me-1"></i>O'yin bo'lgan:</div>
+        <div class="filter-tabs">
+            <a href="?{% if query %}q={{ query }}&{% endif %}{% if sort %}sort={{ sort }}&{% endif %}{% if type_filter %}type={{ type_filter }}&{% endif %}{% if date_filter %}date={{ date_filter }}&{% endif %}"
+               class="filter-tab {% if not game_filter %}active{% endif %}">Barchasi</a>
+            <a href="?game_date=today{% if query %}&q={{ query }}{% endif %}{% if sort %}&sort={{ sort }}{% endif %}{% if type_filter %}&type={{ type_filter }}{% endif %}{% if date_filter %}&date={{ date_filter }}{% endif %}"
+               class="filter-tab {% if game_filter == 'today' %}active{% endif %}">Bugun</a>
+            <a href="?game_date=yesterday{% if query %}&q={{ query }}{% endif %}{% if sort %}&sort={{ sort }}{% endif %}{% if type_filter %}&type={{ type_filter }}{% endif %}{% if date_filter %}&date={{ date_filter }}{% endif %}"
+               class="filter-tab {% if game_filter == 'yesterday' %}active{% endif %}">Kecha</a>
+            <a href="?game_date=this_week{% if query %}&q={{ query }}{% endif %}{% if sort %}&sort={{ sort }}{% endif %}{% if type_filter %}&type={{ type_filter }}{% endif %}{% if date_filter %}&date={{ date_filter }}{% endif %}"
+               class="filter-tab {% if game_filter == 'this_week' %}active{% endif %}">Shu hafta</a>
+            <a href="?game_date=this_month{% if query %}&q={{ query }}{% endif %}{% if sort %}&sort={{ sort }}{% endif %}{% if type_filter %}&type={{ type_filter }}{% endif %}{% if date_filter %}&date={{ date_filter }}{% endif %}"
+               class="filter-tab {% if game_filter == 'this_month' %}active{% endif %}">Shu oy</a>
+        </div>
+
     </div>
 </div>
 
@@ -71,17 +135,17 @@
 {% if chats.has_other_pages %}
 <div class="tg-pagination">
     {% if chats.has_previous %}
-    <a class="tg-page-btn" href="?page={{ chats.previous_page_number }}{% if query %}&q={{ query }}{% endif %}{% if type_filter %}&type={{ type_filter }}{% endif %}"><i class="bi bi-chevron-left"></i></a>
+    <a class="tg-page-btn" href="?page={{ chats.previous_page_number }}{% if query %}&q={{ query }}{% endif %}{% if type_filter %}&type={{ type_filter }}{% endif %}{% if sort %}&sort={{ sort }}{% endif %}{% if date_filter %}&date={{ date_filter }}{% endif %}{% if game_filter %}&game_date={{ game_filter }}{% endif %}"><i class="bi bi-chevron-left"></i></a>
     {% endif %}
     {% for num in chats.paginator.page_range %}
         {% if chats.number == num %}
         <span class="tg-page-btn active">{{ num }}</span>
         {% elif num > chats.number|add:'-3' and num < chats.number|add:'3' %}
-        <a class="tg-page-btn" href="?page={{ num }}{% if query %}&q={{ query }}{% endif %}{% if type_filter %}&type={{ type_filter }}{% endif %}">{{ num }}</a>
+        <a class="tg-page-btn" href="?page={{ num }}{% if query %}&q={{ query }}{% endif %}{% if type_filter %}&type={{ type_filter }}{% endif %}{% if sort %}&sort={{ sort }}{% endif %}{% if date_filter %}&date={{ date_filter }}{% endif %}{% if game_filter %}&game_date={{ game_filter }}{% endif %}">{{ num }}</a>
         {% endif %}
     {% endfor %}
     {% if chats.has_next %}
-    <a class="tg-page-btn" href="?page={{ chats.next_page_number }}{% if query %}&q={{ query }}{% endif %}{% if type_filter %}&type={{ type_filter }}{% endif %}"><i class="bi bi-chevron-right"></i></a>
+    <a class="tg-page-btn" href="?page={{ chats.next_page_number }}{% if query %}&q={{ query }}{% endif %}{% if type_filter %}&type={{ type_filter }}{% endif %}{% if sort %}&sort={{ sort }}{% endif %}{% if date_filter %}&date={{ date_filter }}{% endif %}{% if game_filter %}&game_date={{ game_filter }}{% endif %}"><i class="bi bi-chevron-right"></i></a>
     {% endif %}
 </div>
 {% endif %}

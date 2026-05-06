@@ -247,7 +247,9 @@ def chats_list(request):
     query = request.GET.get('q', '')
     type_filter = request.GET.get('type', '')
     sort = request.GET.get('sort', '-diamond')
-    
+    date_filter = request.GET.get('date', '')
+    game_filter = request.GET.get('game_date', '')
+
     income_subquery = GroupIncome.objects.filter(chat_id=OuterRef('chat_id')).values('chat_id').annotate(total=Sum('amount')).values('total')
     chats = Chat.objects.annotate(total_diamond=Coalesce(Subquery(income_subquery), 0))
 
@@ -255,11 +257,37 @@ def chats_list(request):
         chats = chats.filter(Q(title__icontains=query) | Q(chat_id__icontains=query))
     if type_filter:
         chats = chats.filter(type=type_filter)
-        
+
+    now = timezone.now()
+
+    if date_filter == 'today':
+        chats = chats.filter(created_at__date=now.date())
+    elif date_filter == 'yesterday':
+        yesterday = now.date() - timedelta(days=1)
+        chats = chats.filter(created_at__date=yesterday)
+    elif date_filter == 'this_week':
+        week_start = now.date() - timedelta(days=now.weekday())
+        chats = chats.filter(created_at__date__gte=week_start)
+    elif date_filter == 'this_month':
+        chats = chats.filter(created_at__year=now.year, created_at__month=now.month)
+
+    if game_filter == 'today':
+        chats = chats.filter(games__created_at__date=now.date()).distinct()
+    elif game_filter == 'yesterday':
+        yesterday = now.date() - timedelta(days=1)
+        chats = chats.filter(games__created_at__date=yesterday).distinct()
+    elif game_filter == 'this_week':
+        week_start = now.date() - timedelta(days=now.weekday())
+        chats = chats.filter(games__created_at__date__gte=week_start).distinct()
+    elif game_filter == 'this_month':
+        chats = chats.filter(games__created_at__year=now.year, games__created_at__month=now.month).distinct()
+
     if sort == 'diamond':
         chats = chats.order_by('total_diamond')
     elif sort == '-diamond':
         chats = chats.order_by('-total_diamond')
+    elif sort == 'oldest':
+        chats = chats.order_by('created_at')
     else:
         chats = chats.order_by('-created_at')
 
@@ -267,7 +295,14 @@ def chats_list(request):
     page = request.GET.get('page')
     chats = paginator.get_page(page)
 
-    return render(request, 'bot/chats.html', {'chats': chats, 'query': query, 'type_filter': type_filter, 'sort': sort})
+    return render(request, 'bot/chats.html', {
+        'chats': chats,
+        'query': query,
+        'type_filter': type_filter,
+        'sort': sort,
+        'date_filter': date_filter,
+        'game_filter': game_filter,
+    })
 
 
 @login_required
