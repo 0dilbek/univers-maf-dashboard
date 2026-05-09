@@ -75,6 +75,17 @@ def user_detail(request, user_id):
     transfers_sent = Transfer.objects.filter(from_user=user).order_by('-created_at')[:20]
     transfers_received = Transfer.objects.filter(to_user=user).order_by('-created_at')[:20]
     pairs = Para.objects.filter(Q(user1=user) | Q(user2=user)).select_related('user1', 'user2')[:10]
+    geroy = Geroy.objects.filter(user=user).first()
+
+    game_players_qs = (
+        GamePlayer.objects
+        .filter(user=user)
+        .select_related('game', 'game__chat')
+        .order_by('-game__created_at')
+    )
+    games_paginator = Paginator(game_players_qs, 20)
+    games_page = request.GET.get('games_page')
+    game_players = games_paginator.get_page(games_page)
 
     context = {
         'user': user,
@@ -84,6 +95,8 @@ def user_detail(request, user_id):
         'transfers_sent': transfers_sent,
         'transfers_received': transfers_received,
         'pairs': pairs,
+        'geroy': geroy,
+        'game_players': game_players,
     }
 
     user_incomes = GroupIncome.objects.filter(user_id=user.user_id).values('chat_id').annotate(total=Sum('amount')).filter(total__gt=0).order_by('-total')

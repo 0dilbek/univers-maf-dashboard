@@ -222,5 +222,137 @@
         </div>
     </div>
     {% endif %}
+
+    <!-- Geroy -->
+    {% if geroy %}
+    <div class="col-12">
+        <div class="tg-card">
+            <div class="tg-card-header"><div class="title"><i class="bi bi-shield-fill" style="color:#f5a623"></i> Geroy</div></div>
+            <div style="padding:20px">
+                <div class="row g-3 align-items-center mb-4">
+                    <div class="col-auto">
+                        <div style="width:64px;height:64px;border-radius:16px;background:linear-gradient(135deg,#7b4f00,#f5a623);display:flex;align-items:center;justify-content:center;font-size:2rem">⚔️</div>
+                    </div>
+                    <div class="col">
+                        <div style="font-size:1.2rem;font-weight:700;color:#f5f5f5">{{ geroy.name }}</div>
+                        <div style="color:#708499;font-size:0.85rem">{{ geroy.ball }} ball · Patron: {{ geroy.patron }}</div>
+                    </div>
+                    <div class="col-auto">
+                        <div style="text-align:center;background:#1c2631;border-radius:12px;padding:12px 20px">
+                            <div style="font-size:1.6rem;font-weight:700;color:#f5a623">{{ geroy.level }}</div>
+                            <div style="font-size:0.75rem;color:#708499">Daraja</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Progress -->
+                <div style="margin-bottom:16px">
+                    <div style="display:flex;justify-content:space-between;font-size:0.8rem;color:#708499;margin-bottom:6px">
+                        <span>Keyingi darajaga</span>
+                        <span>{{ geroy.ball }} / {{ geroy.next_level_balls }}</span>
+                    </div>
+                    <div style="background:#1c2631;border-radius:20px;height:8px;overflow:hidden">
+                        <div style="height:100%;width:{{ geroy.progress_percent }}%;background:linear-gradient(90deg,#7b4f00,#f5a623);border-radius:20px;transition:width .3s"></div>
+                    </div>
+                </div>
+
+                <div class="row g-3">
+                    <div class="col-6 col-md-3">
+                        <div style="background:#1c2631;border-radius:10px;padding:12px;text-align:center">
+                            <div style="font-size:1.1rem;font-weight:700;color:#f44336">{{ geroy.min_dmg }}–{{ geroy.max_dmg }}</div>
+                            <div style="font-size:0.75rem;color:#708499;margin-top:3px">Zarar</div>
+                        </div>
+                    </div>
+                    <div class="col-6 col-md-3">
+                        <div style="background:#1c2631;border-radius:10px;padding:12px;text-align:center">
+                            <div style="font-size:1.1rem;font-weight:700;color:#4dbe68">{{ geroy.himoya }} / {{ geroy.max_himoya }}</div>
+                            <div style="font-size:0.75rem;color:#708499;margin-top:3px">Himoya</div>
+                        </div>
+                    </div>
+                    <div class="col-6 col-md-3">
+                        <div style="background:#1c2631;border-radius:10px;padding:12px;text-align:center">
+                            <div style="font-size:1.1rem;font-weight:700;color:#71bafa">{{ geroy.patron }}</div>
+                            <div style="font-size:0.75rem;color:#708499;margin-top:3px">Patron</div>
+                        </div>
+                    </div>
+                    <div class="col-6 col-md-3">
+                        <div style="background:#1c2631;border-radius:10px;padding:12px;text-align:center">
+                            <div style="font-size:1.1rem;font-weight:700;color:#f5a623">{{ geroy.progress_percent }}%</div>
+                            <div style="font-size:0.75rem;color:#708499;margin-top:3px">Progress</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- O'yinlar tarixi -->
+    <div class="col-12">
+        <div class="tg-card">
+            <div class="tg-card-header"><div class="title"><i class="bi bi-controller" style="color:#5288c1"></i> O'yinlar tarixi <span style="color:#708499;font-weight:400;font-size:0.85rem">({{ game_players.paginator.count }} ta)</span></div></div>
+            <div class="tg-table-wrap"><table class="tg-table">
+                <thead>
+                    <tr><th>Guruh</th><th>Rol</th><th>Natija</th><th>Qo'shilgan</th></tr>
+                </thead>
+                <tbody>
+                    {% for gp in game_players %}
+                    <tr>
+                        <td>
+                            <span style="font-weight:600;color:#f5f5f5">{{ gp.game.chat.title }}</span>
+                            <div style="font-size:0.75rem;color:#708499">#{{ gp.game.id }}</div>
+                        </td>
+                        <td>
+                            <span style="background:#1c2631;color:#adb5bd;padding:3px 10px;border-radius:20px;font-size:0.8rem;font-weight:600">{{ gp.role }}</span>
+                        </td>
+                        <td>
+                            {% if gp.game.is_active %}
+                                {% if gp.is_alive %}
+                                <span style="background:#1a3d1a;color:#4dbe68;padding:3px 10px;border-radius:20px;font-size:0.8rem;font-weight:600">
+                                    <i class="bi bi-heart-fill me-1"></i>Tirik
+                                </span>
+                                {% else %}
+                                <span style="background:#3d1a1a;color:#f44336;padding:3px 10px;border-radius:20px;font-size:0.8rem;font-weight:600">
+                                    <i class="bi bi-x-circle me-1"></i>Halok
+                                </span>
+                                {% endif %}
+                            {% elif gp.win %}
+                            <span style="background:#1a3000;color:#76c442;padding:3px 10px;border-radius:20px;font-size:0.8rem;font-weight:600">
+                                <i class="bi bi-trophy-fill me-1"></i>Yutdi
+                            </span>
+                            {% else %}
+                            <span style="background:#2d1a1a;color:#f44336;padding:3px 10px;border-radius:20px;font-size:0.8rem;font-weight:600">
+                                <i class="bi bi-x-lg me-1"></i>Yutqazdi
+                            </span>
+                            {% endif %}
+                        </td>
+                        <td style="color:#708499;font-size:0.82rem">{{ gp.joined_at|date:"d.m.Y H:i" }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="4" style="text-align:center;color:#708499;padding:24px">O'yinlar topilmadi</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table></div>
+
+            {% if game_players.has_other_pages %}
+            <div class="tg-pagination" style="padding:12px 0 4px">
+                {% if game_players.has_previous %}
+                <a class="tg-page-btn" href="?games_page={{ game_players.previous_page_number }}"><i class="bi bi-chevron-left"></i></a>
+                {% endif %}
+                {% for num in game_players.paginator.page_range %}
+                    {% if game_players.number == num %}
+                    <span class="tg-page-btn active">{{ num }}</span>
+                    {% elif num > game_players.number|add:'-3' and num < game_players.number|add:'3' %}
+                    <a class="tg-page-btn" href="?games_page={{ num }}">{{ num }}</a>
+                    {% endif %}
+                {% endfor %}
+                {% if game_players.has_next %}
+                <a class="tg-page-btn" href="?games_page={{ game_players.next_page_number }}"><i class="bi bi-chevron-right"></i></a>
+                {% endif %}
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
 </div>
 {% endblock %}
