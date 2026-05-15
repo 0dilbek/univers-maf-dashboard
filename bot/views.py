@@ -1,13 +1,119 @@
-from datetime import timedelta
+from datetime import timedelta, datetime
 
 from django.shortcuts import render, get_object_or_404, redirect
 from django.db.models import Sum, Count, Q, Subquery, OuterRef
+from django.db.models.functions import TruncDay, TruncHour, TruncMonth, Coalesce
 from django.core.paginator import Paginator
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
+from django.http import JsonResponse
 from django.utils import timezone
 
 from .models import User, BlockedUser, Profile, Transfer, VipUser, Para, Geroy, Chat, Giveaway, Game, GamePlayer, GamePhase, DiamondBuyStars, TransferPrice, GroupIncome, ChatMemberCount
+
+
+@login_required
+def charts_data(request):
+
+    from_str = request.GET.get('from', '')
+    to_str = request.GET.get('to', '')
+    all_time = not from_str and not to_str
+
+    today = timezone.now().date()
+
+    if not all_time:
+        try:
+            from_date = datetime.strptime(from_str, '%Y-%m-%d').date() if from_str else today.replace(day=1)
+            to_date = datetime.strptime(to_str, '%Y-%m-%d').date() if to_str else today
+        except ValueError:
+            from_date = today.replace(day=1)
+            to_date = today
+
+        delta = (to_date - from_date).days
+        if delta == 0:
+            trunc_fn = TruncHour
+            fmt_str = '%H:00'
+        elif delta <= 90:
+            trunc_fn = TruncDay
+            fmt_str = '%d.%m'
+        else:
+            trunc_fn = TruncMonth
+            fmt_str = '%m.%Y'
+
+        from_dt = timezone.make_aware(datetime(from_date.year, from_date.month, from_date.day, 0, 0, 0))
+        to_dt = timezone.make_aware(datetime(to_date.year, to_date.month, to_date.day, 23, 59, 59))
+        date_range = (from_dt, to_dt)
+    else:
+        trunc_fn = TruncMonth
+        fmt_str = '%m.%Y'
+        date_range = None
+
+    def apply_filter(qs, field='created_at'):
+        if date_range:
+            return qs.filter(**{f'{field}__range': date_range})
+        return qs
+
+    def fmt(dt):
+        return dt.strftime(fmt_str)
+
+    users_qs = (
+        apply_filter(GamePlayer.objects.all(), 'game__created_at')
+        .annotate(period=trunc_fn('game__created_at'))
+        .values('period')
+        .annotate(count=Count('user_id', distinct=True))
+        .order_by('period')
+    )
+    games_qs = (
+        apply_filter(Game.objects.all())
+        .annotate(period=trunc_fn('created_at'))
+        .values('period')
+        .annotate(count=Count('id'))
+        .order_by('period')
+    )
+    chats_qs = (
+        apply_filter(Chat.objects.all())
+        .annotate(period=trunc_fn('created_at'))
+        .values('period')
+        .annotate(count=Count('id'))
+        .order_by('period')
+    )
+    transfers_qs = (
+        apply_filter(Transfer.objects.all())
+        .annotate(period=trunc_fn('created_at'))
+        .values('period', 'type')
+        .annotate(count=Count('id'), total=Sum('amount'))
+        .order_by('period')
+    )
+
+    users_data = {fmt(r['period']): r['count'] for r in users_qs}
+    games_data = {fmt(r['period']): r['count'] for r in games_qs}
+    chats_data = {fmt(r['period']): r['count'] for r in chats_qs}
+
+    tc_diamond, tc_dollar, tv_diamond, tv_dollar = {}, {}, {}, {}
+    for r in transfers_qs:
+        p = fmt(r['period'])
+        if r['type'] == 'diamond':
+            tc_diamond[p] = r['count']
+            tv_diamond[p] = r['total']
+        elif r['type'] == 'dollar':
+            tc_dollar[p] = r['count']
+            tv_dollar[p] = r['total']
+
+    all_labels = sorted(set(
+        list(users_data) + list(games_data) + list(chats_data) +
+        list(tc_diamond) + list(tc_dollar)
+    ))
+
+    return JsonResponse({
+        'labels': all_labels,
+        'users':      [users_data.get(l, 0) for l in all_labels],
+        'games':      [games_data.get(l, 0) for l in all_labels],
+        'chats':      [chats_data.get(l, 0) for l in all_labels],
+        'tc_diamond': [tc_diamond.get(l, 0) for l in all_labels],
+        'tc_dollar':  [tc_dollar.get(l, 0)  for l in all_labels],
+        'tv_diamond': [tv_diamond.get(l, 0) for l in all_labels],
+        'tv_dollar':  [tv_dollar.get(l, 0)  for l in all_labels],
+    })
 
 
 @login_required
@@ -256,7 +362,6 @@ def giveaways_list(request):
 
 @login_required
 def chats_list(request):
-    from django.db.models.functions import Coalesce
     query = request.GET.get('q', '')
     type_filter = request.GET.get('type', '')
     sort = request.GET.get('sort', '-diamond')

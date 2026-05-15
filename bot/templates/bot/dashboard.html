@@ -39,6 +39,104 @@
     </div>
 </div>
 
+<!-- ─── Chart filter bar ─────────────────────────────────────────── -->
+<div class="tg-card mb-4" style="padding:14px 18px">
+    <div class="d-flex flex-wrap gap-3 align-items-center">
+        <!-- Quick buttons -->
+        <div class="filter-tabs" id="periodTabs">
+            <button class="filter-tab" data-period="all">Hammasi</button>
+            <button class="filter-tab" data-period="year">Shu yil</button>
+            <button class="filter-tab active" data-period="month">Shu oy</button>
+            <button class="filter-tab" data-period="week">Shu hafta</button>
+            <button class="filter-tab" data-period="today">Bugun</button>
+        </div>
+
+        <div style="width:1px;height:24px;background:#2d4a6b"></div>
+
+        <!-- Custom date range -->
+        <div class="d-flex align-items-center gap-2">
+            <input type="date" id="chartFrom" class="tg-search" style="width:150px;padding:6px 10px;font-size:0.85rem">
+            <span style="color:#708499;font-size:0.85rem">—</span>
+            <input type="date" id="chartTo" class="tg-search" style="width:150px;padding:6px 10px;font-size:0.85rem">
+            <button id="applyCustom" class="tg-btn tg-btn-sm">
+                <i class="bi bi-funnel me-1"></i>Qo'llash
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- ─── Charts row 1: Users & Games ─────────────────────────────── -->
+<div class="row g-4 mb-4">
+    <div class="col-md-6">
+        <div class="tg-card">
+            <div class="tg-card-header">
+                <div class="title"><i class="bi bi-people" style="color:#5288c1"></i> Foydalanuvchilar faolligi</div>
+            </div>
+            <div style="padding:16px;position:relative;min-height:290px;display:flex;align-items:center;justify-content:center">
+                <div id="users-loading" class="chart-loader"><div class="spinner-border" style="color:#5288c1;width:2rem;height:2rem"></div></div>
+                <div id="users-nodata" class="chart-nodata d-none"><i class="bi bi-bar-chart" style="font-size:2.5rem;color:#2b3a4a"></i><div style="color:#708499;margin-top:8px;font-size:0.85rem">Ma'lumot yo'q</div></div>
+                <canvas id="users-chart" class="d-none" style="max-height:260px;width:100%"></canvas>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="tg-card">
+            <div class="tg-card-header">
+                <div class="title"><i class="bi bi-controller" style="color:#f5a623"></i> O'yinlar soni</div>
+            </div>
+            <div style="padding:16px;position:relative;min-height:290px;display:flex;align-items:center;justify-content:center">
+                <div id="games-loading" class="chart-loader"><div class="spinner-border" style="color:#f5a623;width:2rem;height:2rem"></div></div>
+                <div id="games-nodata" class="chart-nodata d-none"><i class="bi bi-controller" style="font-size:2.5rem;color:#2b3a4a"></i><div style="color:#708499;margin-top:8px;font-size:0.85rem">Ma'lumot yo'q</div></div>
+                <canvas id="games-chart" class="d-none" style="max-height:260px;width:100%"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ─── Charts row 2: Chats & Transfer count ────────────────────── -->
+<div class="row g-4 mb-4">
+    <div class="col-md-6">
+        <div class="tg-card">
+            <div class="tg-card-header">
+                <div class="title"><i class="bi bi-chat-dots" style="color:#4dbe68"></i> Guruhlar soni</div>
+            </div>
+            <div style="padding:16px;position:relative;min-height:290px;display:flex;align-items:center;justify-content:center">
+                <div id="chats-loading" class="chart-loader"><div class="spinner-border" style="color:#4dbe68;width:2rem;height:2rem"></div></div>
+                <div id="chats-nodata" class="chart-nodata d-none"><i class="bi bi-chat-dots" style="font-size:2.5rem;color:#2b3a4a"></i><div style="color:#708499;margin-top:8px;font-size:0.85rem">Ma'lumot yo'q</div></div>
+                <canvas id="chats-chart" class="d-none" style="max-height:260px;width:100%"></canvas>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="tg-card">
+            <div class="tg-card-header">
+                <div class="title"><i class="bi bi-arrow-left-right" style="color:#71bafa"></i> Tranzaksiyalar soni</div>
+            </div>
+            <div style="padding:16px;position:relative;min-height:290px;display:flex;align-items:center;justify-content:center">
+                <div id="tc-loading" class="chart-loader"><div class="spinner-border" style="color:#71bafa;width:2rem;height:2rem"></div></div>
+                <div id="tc-nodata" class="chart-nodata d-none"><i class="bi bi-arrow-left-right" style="font-size:2.5rem;color:#2b3a4a"></i><div style="color:#708499;margin-top:8px;font-size:0.85rem">Ma'lumot yo'q</div></div>
+                <canvas id="tc-chart" class="d-none" style="max-height:260px;width:100%"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ─── Charts row 3: Transfer value ────────────────────────────── -->
+<div class="row g-4 mb-4">
+    <div class="col-12">
+        <div class="tg-card">
+            <div class="tg-card-header">
+                <div class="title"><i class="bi bi-graph-up" style="color:#a78bfa"></i> Tranzaksiyalar qiymati</div>
+            </div>
+            <div style="padding:16px;position:relative;min-height:290px;display:flex;align-items:center;justify-content:center">
+                <div id="tv-loading" class="chart-loader"><div class="spinner-border" style="color:#a78bfa;width:2rem;height:2rem"></div></div>
+                <div id="tv-nodata" class="chart-nodata d-none"><i class="bi bi-graph-up" style="font-size:2.5rem;color:#2b3a4a"></i><div style="color:#708499;margin-top:8px;font-size:0.85rem">Ma'lumot yo'q</div></div>
+                <canvas id="tv-chart" class="d-none" style="max-height:260px;width:100%"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
 <div class="row g-4">
     <!-- Top 10 o'yinchi -->
     <div class="col-md-6">
@@ -136,4 +234,190 @@
         </div>
     </div>
 </div>
+
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+<style>
+    .chart-loader { display:flex; flex-direction:column; align-items:center; justify-content:center; }
+    .chart-nodata { flex-direction:column; align-items:center; justify-content:center; text-align:center; }
+</style>
+<script>
+(function() {
+    const CHARTS_URL = "{% url 'charts_data' %}";
+    const instances = {};
+
+    /* ── helpers ── */
+    function pad(n) { return String(n).padStart(2, '0'); }
+    function fmtDate(d) { return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`; }
+
+    function getRange(period) {
+        const now = new Date();
+        const today = fmtDate(now);
+        if (period === 'all')   return { from: '', to: '' };
+        if (period === 'today') return { from: today, to: today };
+        if (period === 'week') {
+            const d = new Date(now);
+            const day = d.getDay() || 7;
+            d.setDate(d.getDate() - day + 1);
+            return { from: fmtDate(d), to: today };
+        }
+        if (period === 'month') {
+            return { from: `${now.getFullYear()}-${pad(now.getMonth()+1)}-01`, to: today };
+        }
+        if (period === 'year') {
+            return { from: `${now.getFullYear()}-01-01`, to: today };
+        }
+        return { from: today, to: today };
+    }
+
+    /* ── loading state helpers ── */
+    const ids = ['users', 'games', 'chats', 'tc', 'tv'];
+
+    function showLoading() {
+        ids.forEach(id => {
+            document.getElementById(`${id}-loading`).classList.remove('d-none');
+            document.getElementById(`${id}-loading`).style.display = 'flex';
+            document.getElementById(`${id}-nodata`).classList.add('d-none');
+            document.getElementById(`${id}-chart`).classList.add('d-none');
+        });
+    }
+
+    function showChart(id, hasData) {
+        document.getElementById(`${id}-loading`).style.display = 'none';
+        if (hasData) {
+            document.getElementById(`${id}-chart`).classList.remove('d-none');
+            document.getElementById(`${id}-nodata`).classList.add('d-none');
+        } else {
+            document.getElementById(`${id}-nodata`).classList.remove('d-none');
+            document.getElementById(`${id}-nodata`).style.display = 'flex';
+        }
+    }
+
+    /* ── chart factory ── */
+    const DEFAULTS = {
+        responsive: true,
+        maintainAspectRatio: true,
+        interaction: { mode: 'index', intersect: false },
+        plugins: {
+            legend: { labels: { color: '#adb5bd', boxWidth: 12, padding: 16 } },
+            tooltip: {
+                backgroundColor: '#1c2631',
+                borderColor: '#2b3a4a',
+                borderWidth: 1,
+                titleColor: '#f5f5f5',
+                bodyColor: '#adb5bd',
+            }
+        },
+        scales: {
+            x: { ticks: { color: '#708499', maxTicksLimit: 12 }, grid: { color: '#1c2631' } },
+            y: { ticks: { color: '#708499' }, grid: { color: '#1c2631' }, beginAtZero: true }
+        }
+    };
+
+    function mkDataset(label, data, color, fill) {
+        return {
+            label, data,
+            borderColor: color,
+            backgroundColor: fill || color + '22',
+            borderWidth: 2,
+            pointRadius: data.length > 30 ? 0 : 3,
+            pointHoverRadius: 5,
+            tension: 0.35,
+            fill: !!fill,
+        };
+    }
+
+    function render(canvasId, datasets, labels) {
+        if (instances[canvasId]) { instances[canvasId].destroy(); }
+        const ctx = document.getElementById(canvasId).getContext('2d');
+        instances[canvasId] = new Chart(ctx, {
+            type: 'line',
+            data: { labels, datasets },
+            options: JSON.parse(JSON.stringify(DEFAULTS)),
+        });
+    }
+
+    /* ── main fetch ── */
+    async function loadCharts(from, to) {
+        showLoading();
+        const params = new URLSearchParams();
+        if (from) params.set('from', from);
+        if (to)   params.set('to', to);
+
+        let data;
+        try {
+            const resp = await fetch(`${CHARTS_URL}?${params}`);
+            data = await resp.json();
+        } catch(e) {
+            ids.forEach(id => {
+                document.getElementById(`${id}-loading`).style.display = 'none';
+                document.getElementById(`${id}-nodata`).classList.remove('d-none');
+                document.getElementById(`${id}-nodata`).style.display = 'flex';
+            });
+            return;
+        }
+
+        const labels = data.labels;
+        const empty  = labels.length === 0;
+
+        /* users */
+        showChart('users', !empty && data.users.some(v => v > 0));
+        if (!empty) render('users-chart', [mkDataset('Foydalanuvchilar', data.users, '#5288c1', '#5288c133')], labels);
+
+        /* games */
+        showChart('games', !empty && data.games.some(v => v > 0));
+        if (!empty) render('games-chart', [mkDataset("O'yinlar", data.games, '#f5a623', '#f5a62333')], labels);
+
+        /* chats */
+        showChart('chats', !empty && data.chats.some(v => v > 0));
+        if (!empty) render('chats-chart', [mkDataset('Guruhlar', data.chats, '#4dbe68', '#4dbe6833')], labels);
+
+        /* transfer count */
+        const hasTC = !empty && (data.tc_diamond.some(v=>v>0) || data.tc_dollar.some(v=>v>0));
+        showChart('tc', hasTC);
+        if (hasTC) render('tc-chart', [
+            mkDataset('💎 Diamond', data.tc_diamond, '#71bafa'),
+            mkDataset('💵 Dollar',  data.tc_dollar,  '#4dbe68'),
+        ], labels);
+
+        /* transfer value */
+        const hasTV = !empty && (data.tv_diamond.some(v=>v>0) || data.tv_dollar.some(v=>v>0));
+        showChart('tv', hasTV);
+        if (hasTV) render('tv-chart', [
+            mkDataset('💎 Diamond (qiymat)', data.tv_diamond, '#a78bfa'),
+            mkDataset('💵 Dollar (qiymat)',  data.tv_dollar,  '#34d399'),
+        ], labels);
+    }
+
+    /* ── UI wiring ── */
+    let activePeriod = 'month';
+
+    document.querySelectorAll('#periodTabs .filter-tab').forEach(btn => {
+        btn.addEventListener('click', () => {
+            document.querySelectorAll('#periodTabs .filter-tab').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            activePeriod = btn.dataset.period;
+            const { from, to } = getRange(activePeriod);
+            document.getElementById('chartFrom').value = from;
+            document.getElementById('chartTo').value   = to;
+            loadCharts(from, to);
+        });
+    });
+
+    document.getElementById('applyCustom').addEventListener('click', () => {
+        const from = document.getElementById('chartFrom').value;
+        const to   = document.getElementById('chartTo').value;
+        if (!from || !to) return;
+        document.querySelectorAll('#periodTabs .filter-tab').forEach(b => b.classList.remove('active'));
+        activePeriod = 'custom';
+        loadCharts(from, to);
+    });
+
+    /* ── init: default = shu oy ── */
+    const init = getRange('month');
+    document.getElementById('chartFrom').value = init.from;
+    document.getElementById('chartTo').value   = init.to;
+    loadCharts(init.from, init.to);
+})();
+</script>
 {% endblock %}
