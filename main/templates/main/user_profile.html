@@ -247,40 +247,63 @@
             position:relative;
         }
 
-        .asset-icon::before {
+        .asset-icon::before,
+        .asset-icon::after {
             content:"";
-            width:17px;
-            height:17px;
-            background:currentColor;
+            position:absolute;
         }
 
         .asset-icon.diamond {
-            color:#fff7f8;
+            color:#fff;
             background:
-                radial-gradient(circle at 32% 24%, rgba(255,255,255,.42), transparent 1.2rem),
-                linear-gradient(145deg, var(--blood-hot), var(--blood) 62%, #250106);
+                radial-gradient(circle at 32% 22%, rgba(255,255,255,.52), transparent 1.1rem),
+                linear-gradient(145deg, #ff6b80, var(--blood-2) 54%, var(--blood));
             border-color:rgba(255,49,80,.32);
             box-shadow:0 14px 32px rgba(127,0,21,.28), inset 0 0 0 1px rgba(255,255,255,.18);
         }
 
         .asset-icon.diamond::before {
-            width:19px;
-            height:18px;
-            clip-path:polygon(50% 0, 100% 38%, 82% 100%, 18% 100%, 0 38%);
-            border-radius:1px;
-            box-shadow:0 0 18px rgba(255,49,80,.38);
+            width:25px;
+            height:21px;
+            background:linear-gradient(180deg, #fff 0 36%, rgba(255,255,255,.84) 37% 100%);
+            clip-path:polygon(18% 0, 82% 0, 100% 34%, 50% 100%, 0 34%);
+            box-shadow:0 0 20px rgba(255,255,255,.28);
+        }
+
+        .asset-icon.diamond::after {
+            width:23px;
+            height:19px;
+            background:
+                linear-gradient(60deg, transparent 0 47%, rgba(127,0,21,.28) 48% 52%, transparent 53% 100%),
+                linear-gradient(-60deg, transparent 0 47%, rgba(127,0,21,.28) 48% 52%, transparent 53% 100%),
+                linear-gradient(90deg, transparent 0 49%, rgba(127,0,21,.2) 50% 53%, transparent 54% 100%);
+            clip-path:polygon(18% 0, 82% 0, 100% 34%, 50% 100%, 0 34%);
         }
 
         .asset-icon.dollar {
-            color:#4ce087;
-            background:linear-gradient(145deg, rgba(76,224,135,.22), rgba(255,255,255,.04));
+            color:#fff;
+            background:
+                radial-gradient(circle at 34% 24%, rgba(255,255,255,.46), transparent 1rem),
+                linear-gradient(145deg, #4ce087, #128b52 58%, #06351f);
+            border-color:rgba(76,224,135,.28);
+            box-shadow:0 14px 32px rgba(18,139,82,.22), inset 0 0 0 1px rgba(255,255,255,.16);
         }
 
         .asset-icon.dollar::before {
-            width:18px;
-            height:18px;
+            width:22px;
+            height:22px;
+            background:rgba(255,255,255,.96);
             border-radius:50%;
-            box-shadow:inset 0 0 0 5px rgba(15,15,18,.88), 0 0 18px rgba(76,224,135,.34);
+            box-shadow:0 0 16px rgba(255,255,255,.18);
+        }
+
+        .asset-icon.dollar::after {
+            content:"$";
+            color:#117445;
+            font-size:16px;
+            font-weight:900;
+            line-height:1;
+            transform:translateY(-1px);
         }
 
         .transfer-list {
