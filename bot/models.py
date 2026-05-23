@@ -82,7 +82,6 @@ class Transfer(models.Model):
     chat_id = models.BigIntegerField(null=True, blank=True)
     amount = models.BigIntegerField()
     type = models.CharField(max_length=50)  # "diamond", "dollar"
-    caption = models.CharField(max_length=100, default="", blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:

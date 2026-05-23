@@ -30,8 +30,8 @@ class ActiveRoleAdmin(admin.ModelAdmin):
 
 @admin.register(Transfer)
 class TransferAdmin(admin.ModelAdmin):
-    list_display = ('id', 'chat_id', 'from_user', 'to_user', 'amount', 'type', 'caption', 'created_at')
-    search_fields = ('from_user__full_name', 'to_user__full_name', 'chat_id', 'caption')
+    list_display = ('id', 'chat_id', 'from_user', 'to_user', 'amount', 'type', 'created_at')
+    search_fields = ('from_user__full_name', 'to_user__full_name', 'chat_id')
     list_filter = ('type',)
 
 
