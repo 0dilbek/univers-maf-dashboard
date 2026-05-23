@@ -224,6 +224,127 @@
         .mini-icon.weapon::before { width:12px; height:3px; border-radius:2px; transform:rotate(-25deg); }
         .mini-icon.mask::before { width:12px; height:7px; border-radius:8px; }
 
+        .asset-icon {
+            width:42px;
+            height:42px;
+            border-radius:16px;
+            display:inline-flex;
+            align-items:center;
+            justify-content:center;
+            flex:0 0 auto;
+            background:linear-gradient(145deg, rgba(255,255,255,.16), rgba(255,255,255,.04));
+            border:1px solid rgba(255,255,255,.14);
+            box-shadow:0 12px 28px rgba(0,0,0,.14);
+            position:relative;
+        }
+
+        .asset-icon::before {
+            content:"";
+            width:17px;
+            height:17px;
+            background:currentColor;
+        }
+
+        .asset-icon.diamond {
+            color:#43c7ff;
+            background:linear-gradient(145deg, rgba(67,199,255,.22), rgba(255,255,255,.04));
+        }
+
+        .asset-icon.diamond::before {
+            transform:rotate(45deg);
+            border-radius:4px;
+            box-shadow:0 0 18px rgba(67,199,255,.46);
+        }
+
+        .asset-icon.dollar {
+            color:#4ce087;
+            background:linear-gradient(145deg, rgba(76,224,135,.22), rgba(255,255,255,.04));
+        }
+
+        .asset-icon.dollar::before {
+            width:18px;
+            height:18px;
+            border-radius:50%;
+            box-shadow:inset 0 0 0 5px rgba(15,15,18,.88), 0 0 18px rgba(76,224,135,.34);
+        }
+
+        .transfer-list {
+            display:grid;
+            gap:10px;
+            position:relative;
+            z-index:1;
+            touch-action:pan-y;
+        }
+
+        .transfer-card {
+            display:grid;
+            grid-template-columns:auto minmax(0, 1fr) auto;
+            align-items:center;
+            gap:13px;
+            padding:13px;
+            border-radius:18px;
+            background:rgba(255,255,255,.08);
+            border:1px solid rgba(255,255,255,.12);
+        }
+
+        .transfer-card.incoming {
+            background:linear-gradient(145deg, rgba(76,224,135,.13), rgba(255,255,255,.07));
+        }
+
+        .transfer-card.outgoing {
+            background:linear-gradient(145deg, rgba(255,49,80,.16), rgba(255,255,255,.06));
+        }
+
+        .transfer-amount {
+            text-align:right;
+            font-weight:900;
+            white-space:nowrap;
+        }
+
+        .direction-pill {
+            display:inline-flex;
+            align-items:center;
+            justify-content:center;
+            min-width:72px;
+            border-radius:999px;
+            padding:5px 9px;
+            font-size:.72rem;
+            font-weight:900;
+            background:rgba(255,255,255,.12);
+            color:#fff;
+        }
+
+        .pager {
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            gap:10px;
+            margin-top:14px;
+            position:relative;
+            z-index:1;
+        }
+
+        .pager-btn {
+            border:1px solid rgba(255,255,255,.14);
+            background:rgba(255,255,255,.09);
+            color:#fff;
+            text-decoration:none;
+            border-radius:999px;
+            min-width:42px;
+            height:36px;
+            display:inline-flex;
+            align-items:center;
+            justify-content:center;
+            font-weight:900;
+        }
+
+        .pager-btn.disabled {
+            opacity:.35;
+            pointer-events:none;
+        }
+
+        .pager-state { color:#d8c8ca; font-size:.84rem; }
+
         .status-pill,
         .result-pill {
             border-radius:999px;
@@ -316,6 +437,8 @@
             .profile-main { padding:22px; }
             .avatar-slot { width:104px; height:104px; border-radius:26px; font-size:2.6rem; }
             .metrics-panel,.items,.two { grid-template-columns:1fr; }
+            .transfer-card { grid-template-columns:auto minmax(0, 1fr); }
+            .transfer-amount { grid-column:2; text-align:left; }
             .row { align-items:flex-start; }
         }
     </style>
@@ -369,25 +492,40 @@
         </section>
         {% endif %}
 
-        <section class="section">
+        <section class="section" id="transfers-section"
+                 data-prev-url="{% if transfers_page.has_previous %}?transfers_page={{ transfers_page.previous_page_number }}#transfers-section{% endif %}"
+                 data-next-url="{% if transfers_page.has_next %}?transfers_page={{ transfers_page.next_page_number }}#transfers-section{% endif %}">
             <div class="section-card">
                 <div class="section-head">
                     <h2>O'tkazmalar</h2>
-                    <div class="section-label">so'nggi 10 ta</div>
+                    <div class="section-label">sahifa {{ transfers_page.number }} / {{ transfers_page.paginator.num_pages }}</div>
                 </div>
-                <div class="two">
-                    <div>
-                        <div class="section-label">Yuborilgan</div>
-                        {% for t in transfers_sent %}
-                        <div class="row"><div class="name">{{ t.to_user.full_name|default:t.to_user.mention|striptags }}<div class="section-label">{{ t.created_at|date:"d.m.Y H:i" }}</div></div><strong><span class="transfer-type"><span class="mini-icon {% if t.type == 'diamond' %}gem{% else %}money{% endif %}"></span>{{ t.amount }} {{ t.type }}</span></strong></div>
-                        {% empty %}<p class="section-label">Transfer yo'q.</p>{% endfor %}
+                <div class="transfer-list">
+                    {% for t in transfers_page %}
+                    <div class="transfer-card {% if t.to_user_id == user.id %}incoming{% else %}outgoing{% endif %}">
+                        <span class="asset-icon {% if t.type == 'diamond' %}diamond{% else %}dollar{% endif %}" aria-label="{{ t.type }}"></span>
+                        <div class="name">
+                            {% if t.to_user_id == user.id %}
+                                <strong>{{ t.from_user.full_name|default:t.from_user.mention|striptags }}</strong>
+                                <div class="section-label">Qabul qilindi | {{ t.created_at|date:"d.m.Y H:i" }}</div>
+                            {% else %}
+                                <strong>{{ t.to_user.full_name|default:t.to_user.mention|striptags }}</strong>
+                                <div class="section-label">Yuborildi | {{ t.created_at|date:"d.m.Y H:i" }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="transfer-amount">
+                            <div>{{ t.amount }}</div>
+                            <span class="direction-pill">{% if t.to_user_id == user.id %}Kirim{% else %}Chiqim{% endif %}</span>
+                        </div>
                     </div>
-                    <div>
-                        <div class="section-label">Qabul qilingan</div>
-                        {% for t in transfers_received %}
-                        <div class="row"><div class="name">{{ t.from_user.full_name|default:t.from_user.mention|striptags }}<div class="section-label">{{ t.created_at|date:"d.m.Y H:i" }}</div></div><strong><span class="transfer-type"><span class="mini-icon {% if t.type == 'diamond' %}gem{% else %}money{% endif %}"></span>{{ t.amount }} {{ t.type }}</span></strong></div>
-                        {% empty %}<p class="section-label">Transfer yo'q.</p>{% endfor %}
-                    </div>
+                    {% empty %}
+                    <p class="section-label">Transfer yo'q.</p>
+                    {% endfor %}
+                </div>
+                <div class="pager">
+                    <a class="pager-btn {% if not transfers_page.has_previous %}disabled{% endif %}" href="{% if transfers_page.has_previous %}?transfers_page={{ transfers_page.previous_page_number }}#transfers-section{% else %}#{% endif %}" aria-label="Oldingi sahifa">‹</a>
+                    <span class="pager-state">{{ transfers_page.start_index }}-{{ transfers_page.end_index }} / {{ transfers_page.paginator.count }}</span>
+                    <a class="pager-btn {% if not transfers_page.has_next %}disabled{% endif %}" href="{% if transfers_page.has_next %}?transfers_page={{ transfers_page.next_page_number }}#transfers-section{% else %}#{% endif %}" aria-label="Keyingi sahifa">›</a>
                 </div>
             </div>
         </section>
@@ -446,5 +584,37 @@
         </section>
         {% endif %}
     </main>
+    <script>
+        (() => {
+            const area = document.getElementById("transfers-section");
+            if (!area) return;
+
+            let startX = 0;
+            let startY = 0;
+            let tracking = false;
+
+            area.addEventListener("pointerdown", (event) => {
+                startX = event.clientX;
+                startY = event.clientY;
+                tracking = true;
+            });
+
+            area.addEventListener("pointerup", (event) => {
+                if (!tracking) return;
+                tracking = false;
+
+                const dx = event.clientX - startX;
+                const dy = event.clientY - startY;
+                if (Math.abs(dx) < 70 || Math.abs(dx) < Math.abs(dy) * 1.2) return;
+
+                const target = dx < 0 ? area.dataset.nextUrl : area.dataset.prevUrl;
+                if (target) window.location.href = target;
+            });
+
+            area.addEventListener("pointercancel", () => {
+                tracking = false;
+            });
+        })();
+    </script>
 </body>
 </html>

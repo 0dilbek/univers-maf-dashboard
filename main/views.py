@@ -1,6 +1,7 @@
 from datetime import timedelta
 
 from django.core.cache import cache
+from django.core.paginator import Paginator
 from django.db import DatabaseError
 from django.db.models import Case, Count, F, IntegerField, OuterRef, Q, Subquery, Sum, When
 from django.db.models.functions import Coalesce
@@ -181,8 +182,10 @@ def user_profile(request, token):
     is_vip = VipUser.objects.filter(user=user).exists()
     is_blocked = BlockedUser.objects.filter(user=user).exists()
     pairs = Para.objects.filter(Q(user1=user) | Q(user2=user)).select_related('user1', 'user2')[:10]
-    transfers_sent = Transfer.objects.filter(from_user=user).order_by('-created_at')[:10]
-    transfers_received = Transfer.objects.filter(to_user=user).order_by('-created_at')[:10]
+    transfers = Transfer.objects.filter(Q(from_user=user) | Q(to_user=user)).select_related(
+        'from_user', 'to_user'
+    ).order_by('-created_at')
+    transfers_page = Paginator(transfers, 8).get_page(request.GET.get('transfers_page'))
 
     games = GamePlayer.objects.filter(user=user).select_related('game', 'game__chat').order_by('-joined_at')[:20]
 
@@ -214,8 +217,7 @@ def user_profile(request, token):
         'is_vip': is_vip,
         'is_blocked': is_blocked,
         'pairs': pairs,
-        'transfers_sent': transfers_sent,
-        'transfers_received': transfers_received,
+        'transfers_page': transfers_page,
         'games': games,
         'score': score,
         'groups': groups,
