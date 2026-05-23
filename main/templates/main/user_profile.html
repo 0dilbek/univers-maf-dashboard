@@ -183,6 +183,10 @@
             border-radius:18px;
             padding:16px;
             box-shadow:0 12px 24px rgba(127,0,21,.06);
+            display:grid;
+            grid-template-columns:auto minmax(0,1fr) auto;
+            align-items:center;
+            gap:12px;
         }
 
         .metric-label,
@@ -195,22 +199,23 @@
         }
 
         .mini-icon {
-            width:20px;
-            height:20px;
-            border-radius:8px;
+            width:34px;
+            height:34px;
+            border-radius:13px;
             display:inline-flex;
             align-items:center;
             justify-content:center;
-            background:rgba(210,10,34,.11);
+            background:linear-gradient(145deg, rgba(210,10,34,.16), rgba(255,255,255,.7));
             color:var(--blood-2);
             flex:0 0 auto;
             position:relative;
+            box-shadow:0 10px 20px rgba(127,0,21,.08), inset 0 0 0 1px rgba(255,255,255,.7);
         }
 
         .mini-icon::before {
             content:"";
-            width:8px;
-            height:8px;
+            width:14px;
+            height:14px;
             border-radius:50%;
             background:currentColor;
             box-shadow:0 0 0 3px rgba(210,10,34,.08);
@@ -221,34 +226,33 @@
             color:var(--blood-2);
         }
         .mini-icon.gem::before {
-            width:10px;
-            height:10px;
-            clip-path:polygon(50% 0, 100% 38%, 82% 100%, 18% 100%, 0 38%);
+            width:19px;
+            height:17px;
+            clip-path:polygon(18% 0, 82% 0, 100% 36%, 50% 100%, 0 36%);
             border-radius:1px;
         }
-        .mini-icon.win::before { width:10px; height:6px; border-radius:2px 2px 7px 7px; }
-        .mini-icon.game::before { width:11px; height:7px; border-radius:4px; }
-        .mini-icon.shield::before { width:9px; height:11px; border-radius:7px 7px 4px 4px; }
-        .mini-icon.doc::before { width:8px; height:11px; border-radius:2px; }
-        .mini-icon.weapon::before { width:12px; height:3px; border-radius:2px; transform:rotate(-25deg); }
-        .mini-icon.mask::before { width:12px; height:7px; border-radius:8px; }
+        .mini-icon.money::before { width:18px; height:18px; border-radius:50%; background:linear-gradient(180deg, currentColor, #137744); box-shadow:inset 0 0 0 5px rgba(255,255,255,.76); }
+        .mini-icon.win::before { width:19px; height:14px; border-radius:3px 3px 11px 11px; clip-path:polygon(8% 0, 92% 0, 82% 72%, 58% 72%, 58% 100%, 42% 100%, 42% 72%, 18% 72%); }
+        .mini-icon.game::before { width:21px; height:14px; border-radius:7px; box-shadow:inset 6px 0 0 rgba(255,255,255,.65), inset -6px 0 0 rgba(255,255,255,.65); }
+        .mini-icon.shield::before { width:17px; height:20px; border-radius:10px 10px 5px 5px; clip-path:polygon(50% 0, 92% 18%, 84% 76%, 50% 100%, 16% 76%, 8% 18%); }
+        .mini-icon.doc::before { width:15px; height:20px; border-radius:3px; clip-path:polygon(0 0, 72% 0, 100% 28%, 100% 100%, 0 100%); }
         .mini-icon.xcoin::before {
-            width:10px;
-            height:10px;
+            width:18px;
+            height:18px;
             border-radius:50%;
             box-shadow:
                 0 0 0 3px rgba(210,10,34,.08),
-                inset 0 0 0 3px rgba(255,255,255,.65);
+                inset 0 0 0 6px rgba(255,255,255,.65);
         }
         .mini-icon.target::before {
-            width:12px;
-            height:12px;
+            width:20px;
+            height:20px;
             border-radius:50%;
-            background:radial-gradient(circle, currentColor 0 2px, transparent 3px 5px, currentColor 6px);
+            background:radial-gradient(circle, currentColor 0 3px, transparent 4px 7px, currentColor 8px 10px, transparent 11px);
         }
         .mini-icon.role::before {
-            width:11px;
-            height:13px;
+            width:16px;
+            height:20px;
             border-radius:2px;
             transform:rotate(8deg);
         }
@@ -419,8 +423,8 @@
             color:#5f5b60;
         }
 
-        .value { font-size:1.72rem; font-weight:900; line-height:1; color:#111014; }
-        .label { color:var(--muted); font-size:.78rem; margin-top:8px; }
+        .value { font-size:1.72rem; font-weight:900; line-height:1; color:#111014; text-align:right; }
+        .label { color:var(--muted); font-size:.82rem; margin-top:0; }
 
         .section {
             margin-top:18px;
@@ -463,11 +467,15 @@
             border:1px solid rgba(105,0,11,.1);
             border-radius:16px;
             padding:12px;
-            display:flex;
-            justify-content:space-between;
+            display:grid;
+            grid-template-columns:minmax(0,1fr) auto;
+            align-items:center;
             gap:12px;
             box-shadow:0 10px 24px rgba(45,6,10,.06);
         }
+
+        .item-title { font-weight:700; color:#211f24; }
+        .item strong { display:inline-flex; align-items:center; justify-content:flex-end; gap:8px; min-width:92px; text-align:right; }
 
         .two { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
         .row {
@@ -521,12 +529,12 @@
             </div>
 
             <div class="metrics-panel">
-                <div class="metric"><div class="value">{{ profile.dollar|default:0 }}</div><div class="label metric-label"><span class="mini-icon money"></span>Dollar</div></div>
-                <div class="metric"><div class="value">{{ profile.diamond|default:0 }}</div><div class="label metric-label"><span class="mini-icon gem"></span>Olmos</div></div>
-                <div class="metric"><div class="value">{{ xcoin_wallet.xcoin|default:0 }}</div><div class="label metric-label"><span class="mini-icon xcoin"></span>XCoin</div></div>
-                <div class="metric"><div class="value">{{ profile.wins|default:0 }}</div><div class="label metric-label"><span class="mini-icon target"></span>G'alaba</div></div>
-                <div class="metric"><div class="value">{{ profile.games_count|default:0 }}</div><div class="label metric-label"><span class="mini-icon game"></span>Barcha o'yinlar</div></div>
-                <div class="metric"><div class="value">{{ active_roles|length }}</div><div class="label metric-label"><span class="mini-icon role"></span>Faol rollar</div></div>
+                <div class="metric"><span class="mini-icon money"></span><div class="label">Dollar</div><div class="value">{{ profile.dollar|default:0 }}</div></div>
+                <div class="metric"><span class="mini-icon gem"></span><div class="label">Olmos</div><div class="value">{{ profile.diamond|default:0 }}</div></div>
+                <div class="metric"><span class="mini-icon xcoin"></span><div class="label">XCoin</div><div class="value">{{ xcoin_wallet.xcoin|default:0 }}</div></div>
+                <div class="metric"><span class="mini-icon target"></span><div class="label">G'alaba</div><div class="value">{{ profile.wins|default:0 }}</div></div>
+                <div class="metric"><span class="mini-icon game"></span><div class="label">Barcha o'yinlar</div><div class="value">{{ profile.games_count|default:0 }}</div></div>
+                <div class="metric"><span class="mini-icon role"></span><div class="label">Faol rollar</div><div class="value">{{ active_roles|length }}</div></div>
             </div>
         </section>
 
