@@ -10,6 +10,11 @@ from django.utils import timezone
 from .models import User, BlockedUser, Profile, Transfer, VipUser, Para, Geroy, Chat, Giveaway, Game, GamePlayer, GamePhase, DiamondBuyStars, TransferPrice
 
 
+def _with_chat_title(queryset):
+    chat_title_sq = Chat.objects.filter(chat_id=OuterRef('chat_id')).values('title')[:1]
+    return queryset.annotate(chat_title=Subquery(chat_title_sq))
+
+
 @login_required
 def dashboard(request):
     total_users = User.objects.filter(profile__isnull=False).count()
@@ -19,7 +24,9 @@ def dashboard(request):
 
     top_players = Profile.objects.select_related('user').order_by('-wins')[:10]
     richest = Profile.objects.select_related('user').order_by('-dollar')[:10]
-    recent_transfers = Transfer.objects.select_related('from_user', 'to_user').order_by('-created_at')[:10]
+    recent_transfers = _with_chat_title(
+        Transfer.objects.select_related('from_user', 'to_user')
+    ).order_by('-created_at')[:10]
 
     context = {
         'total_users': total_users,
@@ -72,8 +79,8 @@ def user_detail(request, user_id):
     profile = Profile.objects.filter(user=user).first()
     is_vip = VipUser.objects.filter(user=user).exists()
     is_blocked = BlockedUser.objects.filter(user=user).exists()
-    transfers_sent = Transfer.objects.filter(from_user=user).order_by('-created_at')[:20]
-    transfers_received = Transfer.objects.filter(to_user=user).order_by('-created_at')[:20]
+    transfers_sent = _with_chat_title(Transfer.objects.filter(from_user=user)).order_by('-created_at')[:20]
+    transfers_received = _with_chat_title(Transfer.objects.filter(to_user=user)).order_by('-created_at')[:20]
     pairs = Para.objects.filter(Q(user1=user) | Q(user2=user)).select_related('user1', 'user2')[:10]
 
     context = {
@@ -91,7 +98,9 @@ def user_detail(request, user_id):
 @login_required
 def transfers_list(request):
     type_filter = request.GET.get('type', '')
-    transfers = Transfer.objects.select_related('from_user', 'to_user').order_by('-created_at')
+    transfers = _with_chat_title(
+        Transfer.objects.select_related('from_user', 'to_user')
+    ).order_by('-created_at')
 
     if type_filter:
         transfers = transfers.filter(type=type_filter)
@@ -360,9 +369,10 @@ def sales_analytics(request):
         paginator = Paginator(items, 50)
         items = paginator.get_page(page_num)
     else:
+        chat_title_sq = Chat.objects.filter(chat_id=OuterRef('transfer__chat_id')).values('title')[:1]
         items = TransferPrice.objects.select_related(
             'transfer', 'transfer__from_user', 'transfer__to_user'
-        ).order_by('-transfer__created_at')
+        ).annotate(chat_title=Subquery(chat_title_sq)).order_by('-transfer__created_at')
         paginator = Paginator(items, 50)
         items = paginator.get_page(page_num)
 

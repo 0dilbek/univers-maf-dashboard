@@ -79,8 +79,10 @@ class Transfer(models.Model):
     id = models.BigAutoField(primary_key=True)
     from_user = models.ForeignKey(User, related_name="transfers_from", on_delete=models.CASCADE)
     to_user = models.ForeignKey(User, related_name="transfers_to", on_delete=models.CASCADE)
+    chat_id = models.BigIntegerField(null=True, blank=True)
     amount = models.BigIntegerField()
     type = models.CharField(max_length=50)  # "diamond", "dollar"
+    caption = models.CharField(max_length=100, default="", blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
