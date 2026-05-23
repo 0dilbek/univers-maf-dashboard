@@ -118,52 +118,95 @@ def group_stats(request, token):
         return render(request, 'main/expired.html', {'subject': link.chat}, status=403)
 
     chat = link.chat
-    start_date = timezone.now() - timedelta(days=30)
-    cache_key = f'group_stats_{chat.chat_id}_last_30_days'
-    cached_data = cache.get(cache_key)
-
-    if cached_data:
-        stats = cached_data['stats']
-        top_players = cached_data['top_players']
-    else:
-        group_games = Game.objects.filter(chat=chat, created_at__gte=start_date)
-        players_period = GamePlayer.objects.filter(game__chat=chat, game__created_at__gte=start_date).select_related('user')
-        scored_players = _players_score_queryset(players_period)
-        top_winners = scored_players.values('user__full_name', 'user__mention').annotate(
-            total_score=Coalesce(Sum('delta'), 0),
-            games_count=Count('game', distinct=True),
-        ).order_by('-total_score')[:200]
-
-        top_players = [
-            {
-                'user': {'full_name': entry['user__full_name'], 'mention': entry['user__mention']},
-                'score': entry['total_score'],
-                'games_count': entry['games_count'],
-            }
-            for entry in top_winners
-        ]
-        stats = {
-            'games_count': group_games.count(),
-            'participants_count': players_period.values('user_id').distinct().count(),
-        }
-        cache.set(cache_key, {'stats': stats, 'top_players': top_players}, 1800)
-
-    top_players_page = Paginator(top_players, 20).get_page(request.GET.get('top_page'))
-    for index, player in enumerate(top_players_page.object_list, start=top_players_page.start_index()):
-        player['rank'] = index
+    section = request.GET.get('section', 'overview')
+    if section not in {'overview', 'rating', 'transfers'}:
+        section = 'overview'
 
     try:
-        incomes_qs = GroupIncome.objects.filter(
-            chat_id=chat.chat_id,
-            created_at__gte=start_date,
-        ).order_by('-created_at')
-        total_diamond = incomes_qs.aggregate(Sum('amount'))['amount__sum'] or 0
-        transfer_history_page = Paginator(incomes_qs, 20).get_page(request.GET.get('transfers_page'))
-        recent_incomes = list(transfer_history_page)
-    except DatabaseError:
-        total_diamond = 0
-        recent_incomes = []
-        transfer_history_page = Paginator([], 20).get_page(1)
+        days = int(request.GET.get('days', 30))
+    except (TypeError, ValueError):
+        days = 30
+    if days not in {7, 30, 90}:
+        days = 30
+
+    start_date = timezone.now() - timedelta(days=days)
+    stats_period_label = f"So'nggi {days} kun"
+    stats = cache.get(f'group_overview_{chat.chat_id}_{days}')
+    if not stats:
+        try:
+            group_games = Game.objects.filter(chat=chat, created_at__gte=start_date)
+            players_period = GamePlayer.objects.filter(game__chat=chat, game__created_at__gte=start_date)
+            total_diamond = GroupIncome.objects.filter(
+                chat_id=chat.chat_id,
+                created_at__gte=start_date,
+            ).aggregate(Sum('amount'))['amount__sum'] or 0
+            stats = {
+                'games_count': group_games.count(),
+                'participants_count': players_period.values('user_id').distinct().count(),
+                'total_diamond': total_diamond,
+            }
+        except Exception:
+            stats = {
+                'games_count': 0,
+                'participants_count': 0,
+                'total_diamond': 0,
+            }
+        cache.set(f'group_overview_{chat.chat_id}_{days}', stats, 900)
+
+    top_players_page = Paginator([], 20).get_page(1)
+    if section == 'rating':
+        cache_key = f'group_rating_{chat.chat_id}_{days}'
+        top_players = cache.get(cache_key)
+        if top_players is None:
+            try:
+                players_period = GamePlayer.objects.filter(
+                    game__chat=chat,
+                    game__created_at__gte=start_date,
+                ).select_related('user')
+                scored_players = _players_score_queryset(players_period)
+                top_winners = scored_players.values('user__full_name', 'user__mention').annotate(
+                    total_score=Coalesce(Sum('delta'), 0),
+                    games_count=Count('game', distinct=True),
+                ).order_by('-total_score')[:200]
+
+                top_players = [
+                    {
+                        'user': {'full_name': entry['user__full_name'], 'mention': entry['user__mention']},
+                        'score': entry['total_score'],
+                        'games_count': entry['games_count'],
+                    }
+                    for entry in top_winners
+                ]
+            except Exception:
+                top_players = []
+            cache.set(cache_key, top_players, 900)
+
+        top_players_page = Paginator(top_players, 20).get_page(request.GET.get('top_page'))
+        for index, player in enumerate(top_players_page.object_list, start=top_players_page.start_index()):
+            player['rank'] = index
+
+    transfer_history_page = Paginator([], 20).get_page(1)
+    transfer_history = []
+    if section == 'transfers':
+        try:
+            incomes_qs = GroupIncome.objects.filter(
+                chat_id=chat.chat_id,
+                created_at__gte=start_date,
+            ).order_by('-created_at')
+            transfer_history_page = Paginator(incomes_qs, 20).get_page(request.GET.get('transfers_page'))
+            recent_incomes = list(transfer_history_page)
+        except Exception:
+            recent_incomes = []
+            transfer_history_page = Paginator([], 20).get_page(1)
+
+        users_map = {u.user_id: u for u in User.objects.filter(user_id__in=[inc.user_id for inc in recent_incomes])}
+        for inc in recent_incomes:
+            u = users_map.get(inc.user_id)
+            transfer_history.append({
+                'user': u.full_name if u and u.full_name else (u.mention if u else f"ID: {inc.user_id}"),
+                'amount': inc.amount,
+                'created_at': inc.created_at,
+            })
 
     try:
         group_balance = GroupBalance.objects.filter(chat_id=chat.chat_id).first()
@@ -188,24 +231,16 @@ def group_stats(request, token):
     else:
         subscription_status = "Yo'q"
 
-    users_map = {u.user_id: u for u in User.objects.filter(user_id__in=[inc.user_id for inc in recent_incomes])}
-    transfer_history = []
-    for inc in recent_incomes:
-        u = users_map.get(inc.user_id)
-        transfer_history.append({
-            'user': u.full_name if u and u.full_name else (u.mention if u else f"ID: {inc.user_id}"),
-            'amount': inc.amount,
-            'created_at': inc.created_at,
-        })
-
     return render(request, 'main/group_stats.html', {
         'chat': chat,
         'stats': stats,
         'top_players': top_players_page,
-        'total_diamond': total_diamond,
+        'total_diamond': stats['total_diamond'],
         'transfer_history': transfer_history,
         'transfer_history_page': transfer_history_page,
-        'stats_period_label': "So'nggi 30 kun",
+        'stats_period_label': stats_period_label,
+        'section': section,
+        'days': days,
         'group_account': {
             'balance': balance_amount,
             'subscription_status': subscription_status,
@@ -236,7 +271,8 @@ def user_profile(request, token):
     ).order_by('-created_at')
     transfers_page = Paginator(transfers, 8).get_page(request.GET.get('transfers_page'))
 
-    games = GamePlayer.objects.filter(user=user).select_related('game', 'game__chat').order_by('-joined_at')[:20]
+    games_qs = GamePlayer.objects.filter(user=user).select_related('game', 'game__chat').order_by('-joined_at')
+    games_page = Paginator(games_qs, 8).get_page(request.GET.get('games_page'))
 
     month_start = timezone.now().replace(day=1, hour=0, minute=0, second=0, microsecond=0)
     try:
@@ -249,15 +285,16 @@ def user_profile(request, token):
     try:
         group_rows = list(GroupIncome.objects.filter(user_id=user.user_id).values('chat_id').annotate(
             total=Sum('amount')
-        ).filter(total__gt=0).order_by('-total')[:10])
+        ).filter(total__gt=0).order_by('-total')[:80])
     except DatabaseError:
         group_rows = list(Transfer.objects.filter(
             Q(from_user=user) | Q(to_user=user),
             chat_id__isnull=False,
-        ).values('chat_id').annotate(total=Count('id')).order_by('-total')[:10])
+        ).values('chat_id').annotate(total=Count('id')).order_by('-total')[:80])
 
     chats_map = {chat.chat_id: chat for chat in Chat.objects.filter(chat_id__in=[row['chat_id'] for row in group_rows])}
     groups = [{'chat': chats_map.get(row['chat_id']), 'chat_id': row['chat_id'], 'total': row['total']} for row in group_rows]
+    groups_page = Paginator(groups, 8).get_page(request.GET.get('groups_page'))
 
     return render(request, 'main/user_profile.html', {
         'user': user,
@@ -269,7 +306,7 @@ def user_profile(request, token):
         'is_blocked': is_blocked,
         'pairs': pairs,
         'transfers_page': transfers_page,
-        'games': games,
+        'games_page': games_page,
         'score': score,
-        'groups': groups,
+        'groups_page': groups_page,
     })

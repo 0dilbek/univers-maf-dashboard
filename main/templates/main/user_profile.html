@@ -388,6 +388,10 @@
             text-align:right;
             font-weight:900;
             white-space:nowrap;
+            display:grid;
+            justify-items:end;
+            gap:6px;
+            color:#fff;
         }
 
         .direction-pill {
@@ -401,6 +405,16 @@
             font-weight:900;
             background:rgba(255,255,255,.12);
             color:#fff;
+        }
+
+        .asset-label {
+            display:inline-flex;
+            align-items:center;
+            gap:6px;
+            margin-top:5px;
+            color:#d8c8ca;
+            font-size:.76rem;
+            font-weight:800;
         }
 
         .pager {
@@ -548,8 +562,20 @@
             .metrics-panel,.items,.two { grid-template-columns:1fr; }
             .role-card { grid-template-columns:auto minmax(0,1fr); }
             .role-card .status-pill { grid-column:2; justify-self:start; }
-            .transfer-card { grid-template-columns:auto minmax(0, 1fr); }
-            .transfer-amount { grid-column:2; text-align:left; }
+            .transfer-card { grid-template-columns:46px minmax(0, 1fr); align-items:flex-start; padding:14px; }
+            .transfer-amount {
+                grid-column:1 / -1;
+                grid-template-columns:1fr auto;
+                align-items:center;
+                justify-items:stretch;
+                text-align:left;
+                padding:10px 12px;
+                border-radius:14px;
+                background:rgba(255,255,255,.08);
+                margin-top:2px;
+            }
+            .transfer-amount > div { font-size:1.1rem; }
+            .direction-pill { justify-self:end; }
             .row { align-items:flex-start; }
         }
     </style>
@@ -643,6 +669,7 @@
                                 <strong>{{ t.to_user.full_name|default:t.to_user.mention|striptags }}</strong>
                                 <div class="section-label">Yuborildi | {{ t.created_at|date:"d.m.Y H:i" }}</div>
                             {% endif %}
+                            <div class="asset-label">{% if t.type == 'diamond' %}Olmos{% else %}Dollar{% endif %}</div>
                         </div>
                         <div class="transfer-amount">
                             <div>{{ t.amount }}</div>
@@ -661,7 +688,7 @@
             </div>
         </section>
 
-        <section class="section">
+        <section class="section" id="activity">
             <div class="section-card light">
                 <div class="section-head">
                     <h2>Faollik</h2>
@@ -670,21 +697,31 @@
                 <div class="two">
                     <div>
                         <div class="section-label">So'nggi o'yinlar</div>
-                        {% for gp in games %}
+                        {% for gp in games_page %}
                         <div class="row">
                             <div class="name">{{ gp.game.chat.title }}<div class="muted">{{ gp.role }} | {{ gp.game.created_at|date:"d.m.Y H:i" }}</div></div>
                             <strong><span class="result-pill {% if not gp.win %}lose{% endif %}">{% if gp.win %}Win{% else %}Lose{% endif %}</span></strong>
                         </div>
                         {% empty %}<p class="muted">O'yinlar topilmadi.</p>{% endfor %}
+                        <div class="pager">
+                            <a class="pager-btn {% if not games_page.has_previous %}disabled{% endif %}" href="{% if games_page.has_previous %}?games_page={{ games_page.previous_page_number }}#activity{% else %}#{% endif %}" aria-label="Oldingi o'yinlar">‹</a>
+                            <span class="pager-state">{{ games_page.start_index }}-{{ games_page.end_index }} / {{ games_page.paginator.count }}</span>
+                            <a class="pager-btn {% if not games_page.has_next %}disabled{% endif %}" href="{% if games_page.has_next %}?games_page={{ games_page.next_page_number }}#activity{% else %}#{% endif %}" aria-label="Keyingi o'yinlar">›</a>
+                        </div>
                     </div>
                     <div>
                         <div class="section-label">Guruh hisoblari</div>
-                        {% for group in groups %}
+                        {% for group in groups_page %}
                         <div class="row">
                             <div class="name">{% if group.chat %}{{ group.chat.title }}{% else %}ID: {{ group.chat_id }}{% endif %}</div>
                             <strong>{{ group.total }}</strong>
                         </div>
                         {% empty %}<p class="muted">Guruh o'tkazmalari yo'q.</p>{% endfor %}
+                        <div class="pager">
+                            <a class="pager-btn {% if not groups_page.has_previous %}disabled{% endif %}" href="{% if groups_page.has_previous %}?groups_page={{ groups_page.previous_page_number }}#activity{% else %}#{% endif %}" aria-label="Oldingi guruhlar">‹</a>
+                            <span class="pager-state">{{ groups_page.start_index }}-{{ groups_page.end_index }} / {{ groups_page.paginator.count }}</span>
+                            <a class="pager-btn {% if not groups_page.has_next %}disabled{% endif %}" href="{% if groups_page.has_next %}?groups_page={{ groups_page.next_page_number }}#activity{% else %}#{% endif %}" aria-label="Keyingi guruhlar">›</a>
+                        </div>
                     </div>
                 </div>
             </div>
