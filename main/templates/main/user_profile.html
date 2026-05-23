@@ -6,18 +6,19 @@
     <title>{{ user.full_name|default:user.mention }} - BloodyMafia</title>
     <style>
         :root {
-            --bg-top: #faf7f4;
-            --bg-mid: #2b1115;
-            --bg-bottom: #050607;
-            --paper: #fffdf9;
-            --paper-soft: #f7f2ed;
-            --ink: #15171d;
-            --muted: #6f737d;
-            --line: #eadfd8;
-            --blood: #9b111e;
-            --blood-deep: #4d050b;
-            --green: #2c8b5f;
-            --blue: #2b79a6;
+            --page-top: #f6f3f0;
+            --page-mid: #1b070a;
+            --page-bottom: #040405;
+            --paper: rgba(255, 255, 255, .94);
+            --paper-strong: #ffffff;
+            --ink: #15151a;
+            --muted: #77737a;
+            --line: rgba(72, 14, 19, .13);
+            --blood: #69000b;
+            --blood-2: #9f0715;
+            --blood-soft: rgba(105, 0, 11, .1);
+            --shadow: 0 24px 70px rgba(45, 6, 10, .16), 0 8px 24px rgba(45, 6, 10, .08);
+            --radius: 22px;
         }
 
         * { box-sizing:border-box; }
@@ -27,8 +28,9 @@
             color:var(--ink);
             font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
             background:
-                radial-gradient(circle at 12% 5%, rgba(155, 17, 30, .12), transparent 28rem),
-                linear-gradient(180deg, var(--bg-top) 0%, #f4ede7 34%, var(--bg-mid) 68%, var(--bg-bottom) 100%);
+                radial-gradient(circle at 12% 8%, rgba(105,0,11,.16), transparent 18rem),
+                radial-gradient(circle at 90% 22%, rgba(105,0,11,.11), transparent 20rem),
+                linear-gradient(180deg, var(--page-top) 0%, #efe8e4 42%, var(--page-mid) 72%, var(--page-bottom) 100%);
             min-height:100vh;
         }
 
@@ -38,191 +40,309 @@
             inset:0;
             pointer-events:none;
             background:
-                radial-gradient(circle at 9% 14%, rgba(155,17,30,.18) 0 1.8rem, transparent 1.9rem),
-                radial-gradient(circle at 92% 9%, rgba(80,5,12,.16) 0 2.8rem, transparent 2.9rem),
-                linear-gradient(135deg, transparent 0 58%, rgba(155,17,30,.08) 58% 59%, transparent 59% 100%);
-            opacity:.75;
-            z-index:-1;
+                linear-gradient(160deg, transparent 0 62%, rgba(70, 0, 8, .16) 62% 63%, transparent 63% 100%),
+                radial-gradient(circle at 4% 36%, rgba(105,0,11,.12) 0 24px, transparent 25px),
+                radial-gradient(circle at 97% 7%, rgba(105,0,11,.14) 0 36px, transparent 37px);
+            mix-blend-mode:multiply;
         }
 
         .wrap {
-            width:min(1040px, calc(100% - 32px));
+            width:min(1120px, calc(100% - 32px));
             margin:0 auto;
-            padding:36px 0 54px;
+            padding:32px 0 58px;
         }
 
-        header,
-        .card {
-            background:var(--paper);
-            border:1px solid rgba(155,17,30,.12);
-            border-radius:14px;
-            box-shadow:0 20px 60px rgba(34, 14, 18, .14), 0 2px 10px rgba(34,14,18,.06);
-            position:relative;
-            overflow:hidden;
-        }
-
-        header {
-            padding:28px;
+        .profile-hero {
+            display:grid;
+            grid-template-columns:minmax(0, 1.25fr) minmax(280px, .75fr);
+            gap:18px;
+            align-items:stretch;
             margin-bottom:18px;
         }
 
-        header::after,
-        .card::after {
+        .profile-card,
+        .metrics-panel,
+        .section-card {
+            background:var(--paper);
+            border:1px solid var(--line);
+            border-radius:var(--radius);
+            box-shadow:var(--shadow);
+            position:relative;
+            overflow:hidden;
+            backdrop-filter:blur(16px);
+        }
+
+        .profile-card {
+            min-height:260px;
+            padding:26px;
+            display:flex;
+            align-items:flex-end;
+            gap:22px;
+        }
+
+        .profile-card::before {
             content:"";
             position:absolute;
-            right:-18px;
-            top:-20px;
-            width:110px;
-            height:90px;
+            inset:0;
             background:
-                radial-gradient(circle at 32% 30%, rgba(155,17,30,.18) 0 13px, transparent 14px),
-                radial-gradient(circle at 58% 48%, rgba(77,5,11,.13) 0 20px, transparent 21px);
-            transform:rotate(16deg);
+                linear-gradient(135deg, rgba(105,0,11,.14), transparent 36%),
+                radial-gradient(circle at 90% 10%, rgba(105,0,11,.18), transparent 12rem);
             pointer-events:none;
         }
 
-        header::before {
+        .profile-card::after,
+        .section-card::after {
             content:"";
             position:absolute;
-            left:0;
-            top:0;
-            bottom:0;
-            width:6px;
-            background:linear-gradient(180deg, var(--blood), var(--blood-deep));
+            right:-34px;
+            bottom:-42px;
+            width:150px;
+            height:150px;
+            border-radius:50%;
+            background:radial-gradient(circle, rgba(105,0,11,.2) 0 32%, rgba(105,0,11,.08) 33% 48%, transparent 49%);
+            pointer-events:none;
         }
 
-        h1 {
-            margin:0;
-            color:var(--blood);
-            font-size:clamp(1.9rem, 5vw, 3.4rem);
-            line-height:1.05;
-            overflow-wrap:anywhere;
+        .avatar-slot {
+            width:116px;
+            height:116px;
+            border-radius:28px;
+            background:
+                linear-gradient(145deg, rgba(105,0,11,.92), rgba(28,2,5,.95)),
+                radial-gradient(circle at 35% 25%, rgba(255,255,255,.28), transparent 2.2rem);
+            color:#fff;
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            font-size:2.8rem;
+            font-weight:800;
+            box-shadow:0 16px 42px rgba(105,0,11,.3);
+            z-index:1;
+            flex:0 0 auto;
         }
 
-        h2 { margin:0 0 12px; font-size:1.05rem; color:#20232b; }
+        .profile-main { z-index:1; min-width:0; }
+        .eyebrow { color:var(--blood); font-size:.78rem; font-weight:800; text-transform:uppercase; letter-spacing:.1em; margin-bottom:8px; }
+        h1 { margin:0; color:#15151a; font-size:clamp(1.8rem, 4.5vw, 3rem); line-height:1.05; overflow-wrap:anywhere; }
+        h2 { margin:0; color:#f8f2ef; font-size:1.05rem; }
+        .section-card.light h2 { color:#17171c; }
         .muted { color:var(--muted); }
-        .badges { display:flex; gap:8px; flex-wrap:wrap; margin-top:14px; }
-        .badge { border:1px solid #eadbd5; border-radius:999px; padding:6px 11px; color:#626672; background:#fff8f4; font-size:.85rem; }
-        .badge.red { color:#8a0f1b; border-color:#e6b7bc; background:#fff4f5; }
-        .badge.green { color:#1f6f4b; border-color:#cce8d9; background:#f4fff8; }
 
-        .grid { display:grid; grid-template-columns:repeat(4, 1fr); gap:14px; margin:18px 0; }
-        .two { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
-        .card { padding:18px; }
-        .value { font-size:1.8rem; font-weight:800; }
-        .label { color:var(--muted); font-size:.82rem; margin-top:4px; }
-        .items { display:grid; grid-template-columns:repeat(3, 1fr); gap:10px; }
+        .badges { display:flex; gap:8px; flex-wrap:wrap; margin-top:14px; }
+        .badge { border:1px solid rgba(105,0,11,.14); border-radius:999px; padding:6px 11px; color:#5f5860; background:rgba(255,255,255,.7); font-size:.84rem; }
+        .badge.red { color:#71020d; border-color:rgba(105,0,11,.22); background:rgba(105,0,11,.07); }
+        .badge.green { color:#176c49; border-color:rgba(23,108,73,.2); background:rgba(23,108,73,.08); }
+
+        .metrics-panel {
+            padding:18px;
+            display:grid;
+            grid-template-columns:1fr 1fr;
+            gap:12px;
+        }
+
+        .metric {
+            background:linear-gradient(180deg, #fff, #f8f3ef);
+            border:1px solid rgba(105,0,11,.11);
+            border-radius:18px;
+            padding:16px;
+        }
+
+        .value { font-size:1.55rem; font-weight:850; line-height:1; color:#17171c; }
+        .label { color:var(--muted); font-size:.78rem; margin-top:7px; }
+
+        .section {
+            margin-top:18px;
+            padding:1px;
+            border-radius:calc(var(--radius) + 1px);
+            background:linear-gradient(135deg, rgba(105,0,11,.22), rgba(255,255,255,.22), rgba(105,0,11,.1));
+        }
+
+        .section-card {
+            padding:20px;
+            background:rgba(18, 17, 19, .78);
+            color:#f8f2ef;
+            box-shadow:0 24px 70px rgba(0,0,0,.18);
+        }
+
+        .section-card.light {
+            background:var(--paper);
+            color:var(--ink);
+        }
+
+        .section-head {
+            display:flex;
+            align-items:flex-end;
+            justify-content:space-between;
+            gap:12px;
+            margin-bottom:12px;
+            position:relative;
+            z-index:1;
+        }
+
+        .section-label { color:#b8a7a7; font-size:.78rem; }
+        .light .section-label { color:var(--muted); }
+
+        .items { display:grid; grid-template-columns:repeat(3, 1fr); gap:10px; position:relative; z-index:1; }
         .item {
-            background:linear-gradient(180deg, #fffaf6, #f5eee8);
-            border:1px solid var(--line);
-            border-radius:8px;
-            padding:10px;
+            background:rgba(255,255,255,.9);
+            color:#1b1a1e;
+            border:1px solid rgba(105,0,11,.1);
+            border-radius:16px;
+            padding:12px;
             display:flex;
             justify-content:space-between;
             gap:12px;
+            box-shadow:0 10px 24px rgba(45,6,10,.06);
         }
-        .row { display:flex; gap:12px; align-items:center; justify-content:space-between; border-bottom:1px solid var(--line); padding:12px 0; }
+
+        .two { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+        .row {
+            display:flex;
+            gap:12px;
+            align-items:center;
+            justify-content:space-between;
+            border-bottom:1px solid rgba(255,255,255,.12);
+            padding:13px 0;
+            position:relative;
+            z-index:1;
+        }
+        .light .row { border-bottom:1px solid rgba(105,0,11,.1); }
         .row:last-child { border-bottom:0; }
         .name { min-width:0; overflow-wrap:anywhere; }
 
-        .two + .two,
-        .card + .card { margin-top:14px; }
+        @media (max-width:860px) {
+            .profile-hero { grid-template-columns:1fr; }
+            .profile-card { min-height:220px; align-items:flex-start; flex-direction:column; }
+        }
 
-        @media (max-width:760px) {
-            .wrap { width:min(100% - 24px, 1040px); padding-top:20px; }
-            header { padding:22px; }
-            .grid,.two,.items { grid-template-columns:1fr; }
+        @media (max-width:640px) {
+            .wrap { width:min(100% - 22px, 1120px); padding-top:22px; }
+            .avatar-slot { width:92px; height:92px; border-radius:22px; font-size:2.1rem; }
+            .metrics-panel,.items,.two { grid-template-columns:1fr; }
             .row { align-items:flex-start; }
         }
     </style>
 </head>
 <body>
     <main class="wrap">
-        <header>
-            <div class="muted">Foydalanuvchi profili</div>
-            <h1>{{ user.full_name|default:user.mention|striptags }}</h1>
-            <div class="muted">{{ user.mention|striptags }} | {{ user.user_id }}</div>
-            <div class="badges">
-                {% if is_vip %}<span class="badge green">VIP</span>{% endif %}
-                {% if is_blocked %}<span class="badge red">Bloklangan</span>{% endif %}
-                <span class="badge">Umumiy ball: {{ score }}</span>
+        <section class="profile-hero">
+            <div class="profile-card">
+                <div class="avatar-slot">{{ user.full_name|default:user.mention|striptags|slice:":1"|upper }}</div>
+                <div class="profile-main">
+                    <div class="eyebrow">BloodyMafia Profile</div>
+                    <h1>{{ user.full_name|default:user.mention|striptags }}</h1>
+                    <div class="muted" style="margin-top:8px">{{ user.mention|striptags }} | {{ user.user_id }}</div>
+                    <div class="badges">
+                        {% if is_vip %}<span class="badge green">VIP</span>{% endif %}
+                        {% if is_blocked %}<span class="badge red">Bloklangan</span>{% endif %}
+                        <span class="badge">Umumiy ball: {{ score }}</span>
+                    </div>
+                </div>
             </div>
-        </header>
 
-        {% if profile %}
-        <section class="grid">
-            <div class="card"><div class="value" style="color:var(--green)">{{ profile.dollar }}</div><div class="label">Dollar</div></div>
-            <div class="card"><div class="value" style="color:var(--blue)">{{ profile.diamond }}</div><div class="label">Diamond</div></div>
-            <div class="card"><div class="value">{{ profile.wins }}</div><div class="label">G'alaba</div></div>
-            <div class="card"><div class="value">{{ profile.games_count }}</div><div class="label">O'yinlar</div></div>
+            <div class="metrics-panel">
+                <div class="metric"><div class="value">{{ profile.dollar|default:0 }}</div><div class="label">Dollar</div></div>
+                <div class="metric"><div class="value">{{ profile.diamond|default:0 }}</div><div class="label">Diamond</div></div>
+                <div class="metric"><div class="value">{{ profile.wins|default:0 }}</div><div class="label">G'alaba</div></div>
+                <div class="metric"><div class="value">{{ profile.games_count|default:0 }}</div><div class="label">O'yinlar</div></div>
+            </div>
         </section>
 
-        <section class="card" style="margin-bottom:14px">
-            <h2>Qurollar va himoyalar</h2>
-            <div class="items">
-                <div class="item"><span>Himoya</span><strong>{{ profile.himoya }} {% if profile.on_himoya %}ON{% else %}OFF{% endif %}</strong></div>
-                <div class="item"><span>Hujjat</span><strong>{{ profile.hujjat }} {% if profile.on_hujjat %}ON{% else %}OFF{% endif %}</strong></div>
-                <div class="item"><span>Miltiq</span><strong>{{ profile.miltiq }} {% if profile.on_miltiq %}ON{% else %}OFF{% endif %}</strong></div>
-                <div class="item"><span>Maska</span><strong>{{ profile.maska }} {% if profile.on_maska %}ON{% else %}OFF{% endif %}</strong></div>
-                <div class="item"><span>Qotildan himoya</span><strong>{{ profile.qotildan_himoya }} {% if profile.on_qotildan_himoya %}ON{% else %}OFF{% endif %}</strong></div>
-                <div class="item"><span>Doridan himoya</span><strong>{{ profile.doridan_himoya }} {% if profile.on_doridan_himoya %}ON{% else %}OFF{% endif %}</strong></div>
-                <div class="item"><span>Osishdan himoya</span><strong>{{ profile.osishdan_himoya }} {% if profile.on_osishdan_himoya %}ON{% else %}OFF{% endif %}</strong></div>
-                <div class="item"><span>Slip himoya</span><strong>{{ profile.slip_himoya }} {% if profile.on_slip_himoya %}ON{% else %}OFF{% endif %}</strong></div>
-                <div class="item"><span>Geroy himoya</span><strong>{{ profile.geroy_himoya }} {% if profile.on_geroy_himoya %}ON{% else %}OFF{% endif %}</strong></div>
+        {% if profile %}
+        <section class="section">
+            <div class="section-card light">
+                <div class="section-head">
+                    <h2>Inventar va himoyalar</h2>
+                    <div class="section-label">statuslar</div>
+                </div>
+                <div class="items">
+                    <div class="item"><span>Himoya</span><strong>{{ profile.himoya }} {% if profile.on_himoya %}ON{% else %}OFF{% endif %}</strong></div>
+                    <div class="item"><span>Hujjat</span><strong>{{ profile.hujjat }} {% if profile.on_hujjat %}ON{% else %}OFF{% endif %}</strong></div>
+                    <div class="item"><span>Miltiq</span><strong>{{ profile.miltiq }} {% if profile.on_miltiq %}ON{% else %}OFF{% endif %}</strong></div>
+                    <div class="item"><span>Maska</span><strong>{{ profile.maska }} {% if profile.on_maska %}ON{% else %}OFF{% endif %}</strong></div>
+                    <div class="item"><span>Qotildan himoya</span><strong>{{ profile.qotildan_himoya }} {% if profile.on_qotildan_himoya %}ON{% else %}OFF{% endif %}</strong></div>
+                    <div class="item"><span>Doridan himoya</span><strong>{{ profile.doridan_himoya }} {% if profile.on_doridan_himoya %}ON{% else %}OFF{% endif %}</strong></div>
+                    <div class="item"><span>Osishdan himoya</span><strong>{{ profile.osishdan_himoya }} {% if profile.on_osishdan_himoya %}ON{% else %}OFF{% endif %}</strong></div>
+                    <div class="item"><span>Slip himoya</span><strong>{{ profile.slip_himoya }} {% if profile.on_slip_himoya %}ON{% else %}OFF{% endif %}</strong></div>
+                    <div class="item"><span>Geroy himoya</span><strong>{{ profile.geroy_himoya }} {% if profile.on_geroy_himoya %}ON{% else %}OFF{% endif %}</strong></div>
+                </div>
             </div>
         </section>
         {% endif %}
 
-        <section class="two">
-            <div class="card">
-                <h2>So'nggi o'yinlar</h2>
-                {% for gp in games %}
-                <div class="row">
-                    <div class="name">{{ gp.game.chat.title }}<div class="muted">{{ gp.role }} | {{ gp.game.created_at|date:"d.m.Y H:i" }}</div></div>
-                    <strong>{% if gp.win %}Win{% else %}Lose{% endif %}</strong>
+        <section class="section">
+            <div class="section-card">
+                <div class="section-head">
+                    <h2>O'tkazmalar</h2>
+                    <div class="section-label">so'nggi 10 ta</div>
                 </div>
-                {% empty %}<p class="muted">O'yinlar topilmadi.</p>{% endfor %}
-            </div>
-
-            <div class="card">
-                <h2>Guruh hisoblari</h2>
-                {% for group in groups %}
-                <div class="row">
-                    <div class="name">{% if group.chat %}{{ group.chat.title }}{% else %}ID: {{ group.chat_id }}{% endif %}</div>
-                    <strong>{{ group.total }}</strong>
+                <div class="two">
+                    <div>
+                        <div class="section-label">Yuborilgan</div>
+                        {% for t in transfers_sent %}
+                        <div class="row"><div class="name">{{ t.to_user.full_name|default:t.to_user.mention|striptags }}<div class="section-label">{{ t.created_at|date:"d.m.Y H:i" }}</div></div><strong>{{ t.amount }} {{ t.type }}</strong></div>
+                        {% empty %}<p class="section-label">Transfer yo'q.</p>{% endfor %}
+                    </div>
+                    <div>
+                        <div class="section-label">Qabul qilingan</div>
+                        {% for t in transfers_received %}
+                        <div class="row"><div class="name">{{ t.from_user.full_name|default:t.from_user.mention|striptags }}<div class="section-label">{{ t.created_at|date:"d.m.Y H:i" }}</div></div><strong>{{ t.amount }} {{ t.type }}</strong></div>
+                        {% empty %}<p class="section-label">Transfer yo'q.</p>{% endfor %}
+                    </div>
                 </div>
-                {% empty %}<p class="muted">Guruh o'tkazmalari yo'q.</p>{% endfor %}
             </div>
         </section>
 
-        <section class="two" style="margin-top:14px">
-            <div class="card">
-                <h2>Yuborilgan transferlar</h2>
-                {% for t in transfers_sent %}
-                <div class="row"><div class="name">{{ t.to_user.full_name|default:t.to_user.mention|striptags }}<div class="muted">{{ t.created_at|date:"d.m.Y H:i" }}</div></div><strong>{{ t.amount }} {{ t.type }}</strong></div>
-                {% empty %}<p class="muted">Transfer yo'q.</p>{% endfor %}
-            </div>
-            <div class="card">
-                <h2>Qabul qilingan transferlar</h2>
-                {% for t in transfers_received %}
-                <div class="row"><div class="name">{{ t.from_user.full_name|default:t.from_user.mention|striptags }}<div class="muted">{{ t.created_at|date:"d.m.Y H:i" }}</div></div><strong>{{ t.amount }} {{ t.type }}</strong></div>
-                {% empty %}<p class="muted">Transfer yo'q.</p>{% endfor %}
+        <section class="section">
+            <div class="section-card light">
+                <div class="section-head">
+                    <h2>Faollik</h2>
+                    <div class="section-label">o'yinlar va guruhlar</div>
+                </div>
+                <div class="two">
+                    <div>
+                        <div class="section-label">So'nggi o'yinlar</div>
+                        {% for gp in games %}
+                        <div class="row">
+                            <div class="name">{{ gp.game.chat.title }}<div class="muted">{{ gp.role }} | {{ gp.game.created_at|date:"d.m.Y H:i" }}</div></div>
+                            <strong>{% if gp.win %}Win{% else %}Lose{% endif %}</strong>
+                        </div>
+                        {% empty %}<p class="muted">O'yinlar topilmadi.</p>{% endfor %}
+                    </div>
+                    <div>
+                        <div class="section-label">Guruh hisoblari</div>
+                        {% for group in groups %}
+                        <div class="row">
+                            <div class="name">{% if group.chat %}{{ group.chat.title }}{% else %}ID: {{ group.chat_id }}{% endif %}</div>
+                            <strong>{{ group.total }}</strong>
+                        </div>
+                        {% empty %}<p class="muted">Guruh o'tkazmalari yo'q.</p>{% endfor %}
+                    </div>
+                </div>
             </div>
         </section>
 
         {% if geroy or pairs %}
-        <section class="two" style="margin-top:14px">
-            <div class="card">
-                <h2>Geroy</h2>
-                {% if geroy %}
-                <div class="row"><div class="name">{{ geroy.name }}<div class="muted">Level {{ geroy.level }}</div></div><strong>{{ geroy.ball }} ball</strong></div>
-                {% else %}<p class="muted">Geroy yo'q.</p>{% endif %}
-            </div>
-            <div class="card">
-                <h2>Paralar</h2>
-                {% for pair in pairs %}
-                <div class="row"><div class="name">{{ pair.user1.full_name|default:pair.user1.mention|striptags }} / {{ pair.user2.full_name|default:pair.user2.mention|striptags }}</div><span class="muted">{{ pair.created_at|date:"d.m.Y" }}</span></div>
-                {% empty %}<p class="muted">Para yo'q.</p>{% endfor %}
+        <section class="section">
+            <div class="section-card">
+                <div class="section-head">
+                    <h2>Qo'shimcha</h2>
+                    <div class="section-label">geroy va paralar</div>
+                </div>
+                <div class="two">
+                    <div>
+                        <div class="section-label">Geroy</div>
+                        {% if geroy %}
+                        <div class="row"><div class="name">{{ geroy.name }}<div class="section-label">Level {{ geroy.level }}</div></div><strong>{{ geroy.ball }} ball</strong></div>
+                        {% else %}<p class="section-label">Geroy yo'q.</p>{% endif %}
+                    </div>
+                    <div>
+                        <div class="section-label">Paralar</div>
+                        {% for pair in pairs %}
+                        <div class="row"><div class="name">{{ pair.user1.full_name|default:pair.user1.mention|striptags }} / {{ pair.user2.full_name|default:pair.user2.mention|striptags }}</div><span class="section-label">{{ pair.created_at|date:"d.m.Y" }}</span></div>
+                        {% empty %}<p class="section-label">Para yo'q.</p>{% endfor %}
+                    </div>
+                </div>
             </div>
         </section>
         {% endif %}
