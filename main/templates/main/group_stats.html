@@ -213,6 +213,13 @@
         .asset-icon::after { content:""; position:absolute; width:23px; height:19px; background:linear-gradient(60deg, transparent 0 47%, rgba(127,0,21,.28) 48% 52%, transparent 53% 100%), linear-gradient(-60deg, transparent 0 47%, rgba(127,0,21,.28) 48% 52%, transparent 53% 100%), linear-gradient(90deg, transparent 0 49%, rgba(127,0,21,.2) 50% 53%, transparent 54% 100%); clip-path:polygon(18% 0, 82% 0, 100% 34%, 50% 100%, 0 34%); }
         .transfer-amount { text-align:right; font-weight:900; white-space:nowrap; }
 
+        .pager { display:flex; align-items:center; justify-content:center; gap:10px; margin-top:14px; position:relative; z-index:1; }
+        .pager-btn { border:1px solid rgba(255,255,255,.14); background:rgba(255,255,255,.09); color:#fff; text-decoration:none; border-radius:999px; min-width:42px; height:36px; display:inline-flex; align-items:center; justify-content:center; font-weight:900; }
+        .light .pager-btn { border-color:rgba(127,0,21,.14); background:rgba(127,0,21,.06); color:var(--blood); }
+        .pager-btn.disabled { opacity:.35; pointer-events:none; }
+        .pager-state { color:#d8c8ca; font-size:.84rem; }
+        .light .pager-state { color:var(--muted); }
+
         @media (max-width:860px) {
             .group-hero { grid-template-columns:1fr; }
             .hero-card { grid-template-columns:1fr; min-height:0; }
@@ -238,11 +245,9 @@
                 <div class="hero-main">
                     <div class="eyebrow">BloodyMafia Group</div>
                     <h1>{{ chat.title }}</h1>
-                    <div class="muted" style="margin-top:8px">{{ chat.type|title }} | Statistika va reyting</div>
+                    <div class="muted" style="margin-top:8px">{{ chat.type|title }} | {{ stats_period_label }} statistikasi</div>
                     <nav class="tabs">
-                        <a href="?period=day" class="{% if period == 'day' %}active{% endif %}">Bugun</a>
-                        <a href="?period=week" class="{% if period == 'week' %}active{% endif %}">Hafta</a>
-                        <a href="?period=month" class="{% if period == 'month' or not period %}active{% endif %}">Oy</a>
+                        <a href="#" class="active">{{ stats_period_label }}</a>
                     </nav>
                 </div>
             </div>
@@ -254,16 +259,16 @@
             </div>
         </section>
 
-        <section class="section">
+        <section class="section" id="rating">
             <div class="section-card light">
                 <div class="section-head">
                     <h2>Reyting</h2>
-                    <div class="section-label">{{ period|default:"month" }}</div>
+                    <div class="section-label">{{ stats_period_label }} | sahifa {{ top_players.number }} / {{ top_players.paginator.num_pages }}</div>
                 </div>
                 <div class="leader-list">
                     {% for player in top_players %}
                     <div class="leader-card">
-                        <div class="rank">#{{ forloop.counter }}</div>
+                        <div class="rank">#{{ player.rank }}</div>
                         <div class="name">
                             <strong>{{ player.user.full_name|default:player.user.mention|striptags }}</strong>
                             <div class="muted">reyting ishtirokchisi</div>
@@ -277,14 +282,19 @@
                     <p class="muted">Ushbu davrda hali o'yinlar o'tkazilmagan.</p>
                     {% endfor %}
                 </div>
+                <div class="pager">
+                    <a class="pager-btn {% if not top_players.has_previous %}disabled{% endif %}" href="{% if top_players.has_previous %}?top_page={{ top_players.previous_page_number }}#rating{% else %}#{% endif %}" aria-label="Oldingi reyting sahifasi">‹</a>
+                    <span class="pager-state">{{ top_players.start_index }}-{{ top_players.end_index }} / {{ top_players.paginator.count }}</span>
+                    <a class="pager-btn {% if not top_players.has_next %}disabled{% endif %}" href="{% if top_players.has_next %}?top_page={{ top_players.next_page_number }}#rating{% else %}#{% endif %}" aria-label="Keyingi reyting sahifasi">›</a>
+                </div>
             </div>
         </section>
 
-        <section class="section">
+        <section class="section" id="transfers">
             <div class="section-card">
                 <div class="section-head">
                     <h2>O'tkazishlar tarixi</h2>
-                    <div class="section-label">olmos kirimlari</div>
+                    <div class="section-label">{{ stats_period_label }} | sahifa {{ transfer_history_page.number }} / {{ transfer_history_page.paginator.num_pages }}</div>
                 </div>
                 <div class="transfer-list">
                     {% for transfer in transfer_history %}
@@ -299,6 +309,11 @@
                     {% empty %}
                     <p class="section-label">Hali guruhga olmos o'tkazilmagan.</p>
                     {% endfor %}
+                </div>
+                <div class="pager">
+                    <a class="pager-btn {% if not transfer_history_page.has_previous %}disabled{% endif %}" href="{% if transfer_history_page.has_previous %}?transfers_page={{ transfer_history_page.previous_page_number }}#transfers{% else %}#{% endif %}" aria-label="Oldingi o'tkazmalar sahifasi">‹</a>
+                    <span class="pager-state">{{ transfer_history_page.start_index }}-{{ transfer_history_page.end_index }} / {{ transfer_history_page.paginator.count }}</span>
+                    <a class="pager-btn {% if not transfer_history_page.has_next %}disabled{% endif %}" href="{% if transfer_history_page.has_next %}?transfers_page={{ transfer_history_page.next_page_number }}#transfers{% else %}#{% endif %}" aria-label="Keyingi o'tkazmalar sahifasi">›</a>
                 </div>
             </div>
         </section>

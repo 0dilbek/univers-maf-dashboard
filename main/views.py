@@ -115,9 +115,8 @@ def group_stats(request, token):
         return render(request, 'main/expired.html', {'subject': link.chat}, status=403)
 
     chat = link.chat
-    period = request.GET.get('period', 'month')
-    start_date = _period_start(period)
-    cache_key = f'group_stats_{chat.chat_id}_{period}'
+    start_date = timezone.now() - timedelta(days=30)
+    cache_key = f'group_stats_{chat.chat_id}_last_30_days'
     cached_data = cache.get(cache_key)
 
     if cached_data:
@@ -130,7 +129,7 @@ def group_stats(request, token):
         top_winners = scored_players.values('user__full_name', 'user__mention').annotate(
             total_score=Coalesce(Sum('delta'), 0),
             games_count=Count('game', distinct=True),
-        ).order_by('-total_score')[:50]
+        ).order_by('-total_score')[:200]
 
         top_players = [
             {
@@ -146,12 +145,22 @@ def group_stats(request, token):
         }
         cache.set(cache_key, {'stats': stats, 'top_players': top_players}, 1800)
 
+    top_players_page = Paginator(top_players, 20).get_page(request.GET.get('top_page'))
+    for index, player in enumerate(top_players_page.object_list, start=top_players_page.start_index()):
+        player['rank'] = index
+
     try:
-        total_diamond = GroupIncome.objects.filter(chat_id=chat.chat_id).aggregate(Sum('amount'))['amount__sum'] or 0
-        recent_incomes = list(GroupIncome.objects.filter(chat_id=chat.chat_id).order_by('-created_at')[:50])
+        incomes_qs = GroupIncome.objects.filter(
+            chat_id=chat.chat_id,
+            created_at__gte=start_date,
+        ).order_by('-created_at')
+        total_diamond = incomes_qs.aggregate(Sum('amount'))['amount__sum'] or 0
+        transfer_history_page = Paginator(incomes_qs, 20).get_page(request.GET.get('transfers_page'))
+        recent_incomes = list(transfer_history_page)
     except DatabaseError:
         total_diamond = 0
         recent_incomes = []
+        transfer_history_page = Paginator([], 20).get_page(1)
 
     users_map = {u.user_id: u for u in User.objects.filter(user_id__in=[inc.user_id for inc in recent_incomes])}
     transfer_history = []
@@ -166,10 +175,11 @@ def group_stats(request, token):
     return render(request, 'main/group_stats.html', {
         'chat': chat,
         'stats': stats,
-        'top_players': top_players,
-        'period': period,
+        'top_players': top_players_page,
         'total_diamond': total_diamond,
         'transfer_history': transfer_history,
+        'transfer_history_page': transfer_history_page,
+        'stats_period_label': "So'nggi 30 kun",
     })
 
 
