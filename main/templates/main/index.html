@@ -3,68 +3,104 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BloodyMafia</title>
+    <title>BloodyMafia Owner Login</title>
     <style>
         :root {
-            --bg: #0d1017;
-            --panel: #171d27;
-            --line: #2a3342;
-            --red: #d64a4a;
-            --text: #f4f7fb;
-            --muted: #8f9bad;
+            --page-top:#fff7f8;
+            --page-mid:#210208;
+            --page-bottom:#040405;
+            --paper:#fff;
+            --ink:#101014;
+            --muted:#6c6670;
+            --line:rgba(128,0,20,.16);
+            --blood:#7f0015;
+            --blood-2:#d20a22;
+            --shadow:0 28px 80px rgba(64,0,12,.18), 0 10px 28px rgba(64,0,12,.1);
         }
-        * { box-sizing: border-box; }
+        * { box-sizing:border-box; }
         body {
-            margin: 0;
-            background: var(--bg);
-            color: var(--text);
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+            margin:0;
+            min-height:100vh;
+            display:grid;
+            place-items:center;
+            padding:24px;
+            color:var(--ink);
+            font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+            background:
+                radial-gradient(circle at 12% 9%, rgba(255,49,80,.22), transparent 20rem),
+                radial-gradient(circle at 88% 18%, rgba(127,0,21,.18), transparent 22rem),
+                linear-gradient(180deg, var(--page-top) 0%, #fff 34%, #f9eef1 52%, var(--page-mid) 78%, var(--page-bottom) 100%);
         }
-        .wrap { width: min(980px, calc(100% - 32px)); margin: 0 auto; padding: 56px 0; }
-        header { margin-bottom: 32px; }
-        h1 { margin: 0; font-size: clamp(2rem, 6vw, 4.5rem); line-height: 1; color: var(--red); }
-        p { color: var(--muted); }
-        .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin: 28px 0; }
-        .card { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 18px; }
-        .value { font-size: 2rem; font-weight: 800; }
-        .label { color: var(--muted); font-size: .85rem; margin-top: 4px; }
-        table { width: 100%; border-collapse: collapse; }
-        th, td { text-align: left; padding: 12px; border-bottom: 1px solid var(--line); }
-        th { color: var(--muted); font-size: .78rem; text-transform: uppercase; }
-        @media (max-width: 680px) { .grid { grid-template-columns: 1fr; } }
+        .login-card {
+            width:min(100%, 430px);
+            background:rgba(255,255,255,.96);
+            border:1px solid var(--line);
+            border-radius:24px;
+            box-shadow:var(--shadow);
+            padding:28px;
+            position:relative;
+            overflow:hidden;
+        }
+        .login-card::after {
+            content:"";
+            position:absolute;
+            left:0;
+            right:0;
+            bottom:0;
+            height:5px;
+            background:linear-gradient(90deg, var(--blood), #ff3150, var(--blood));
+        }
+        .eyebrow { color:var(--blood-2); font-size:.76rem; font-weight:900; text-transform:uppercase; letter-spacing:.14em; margin-bottom:10px; }
+        h1 { margin:0 0 8px; font-size:2rem; line-height:1.05; }
+        p { margin:0 0 22px; color:var(--muted); }
+        label { display:block; font-size:.8rem; font-weight:800; color:#3b3339; margin:14px 0 7px; }
+        input {
+            width:100%;
+            border:1px solid rgba(127,0,21,.16);
+            border-radius:14px;
+            padding:13px 14px;
+            font:inherit;
+            outline:none;
+            background:#fff;
+        }
+        input:focus { border-color:rgba(210,10,34,.52); box-shadow:0 0 0 4px rgba(210,10,34,.08); }
+        button {
+            width:100%;
+            margin-top:18px;
+            border:0;
+            border-radius:999px;
+            padding:13px 16px;
+            color:#fff;
+            background:linear-gradient(135deg,var(--blood),var(--blood-2));
+            font-weight:900;
+            cursor:pointer;
+        }
+        .error {
+            margin-top:14px;
+            border:1px solid rgba(210,10,34,.2);
+            background:rgba(210,10,34,.08);
+            color:var(--blood);
+            border-radius:14px;
+            padding:10px 12px;
+            font-size:.86rem;
+            font-weight:800;
+        }
     </style>
 </head>
 <body>
-    <main class="wrap">
-        <header>
-            <h1>BloodyMafia</h1>
-            <p>Bot statistikasi va umumiy reyting.</p>
-        </header>
-
-        <section class="grid">
-            <div class="card"><div class="value">{{ stats.users_count }}</div><div class="label">Foydalanuvchilar</div></div>
-            <div class="card"><div class="value">{{ stats.chats_count }}</div><div class="label">Guruhlar</div></div>
-            <div class="card"><div class="value">{{ stats.games_count }}</div><div class="label">O'yinlar</div></div>
-        </section>
-
-        <section class="card">
-            <h2 style="margin:0 0 12px;font-size:1.1rem">Top o'yinchilar</h2>
-            <table>
-                <thead><tr><th>#</th><th>Foydalanuvchi</th><th>G'alaba</th><th>O'yin</th></tr></thead>
-                <tbody>
-                    {% for item in top_players %}
-                    <tr>
-                        <td>{{ forloop.counter }}</td>
-                        <td>{{ item.user.full_name|default:item.user.mention|striptags }}</td>
-                        <td>{{ item.wins }}</td>
-                        <td>{{ item.games_count }}</td>
-                    </tr>
-                    {% empty %}
-                    <tr><td colspan="4" style="color:var(--muted)">Ma'lumot yo'q</td></tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </section>
+    <main class="login-card">
+        <div class="eyebrow">BloodyMafia Dashboard</div>
+        <h1>Guruh egasi kirishi</h1>
+        <p>Admin paneldan berilgan login-parol orqali guruh boshqaruviga kiring.</p>
+        <form method="post">
+            {% csrf_token %}
+            <label for="login">Login</label>
+            <input id="login" name="login" autocomplete="username" required>
+            <label for="password">Parol</label>
+            <input id="password" name="password" type="password" autocomplete="current-password" required>
+            <button type="submit">Kirish</button>
+        </form>
+        {% if error %}<div class="error">{{ error }}</div>{% endif %}
     </main>
 </body>
 </html>

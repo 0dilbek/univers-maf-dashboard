@@ -6,7 +6,7 @@ from django.db import DatabaseError
 from django.db.models import Case, Count, F, IntegerField, OuterRef, Q, Subquery, Sum, When
 from django.db.models.functions import Coalesce
 from django.http import JsonResponse
-from django.shortcuts import get_object_or_404, render
+from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 
 from bot.models import (
@@ -31,7 +31,7 @@ from bot.models import (
     ActiveRole,
     XCoinWallet,
 )
-from .models import GroupStatsLink, UserProfileLink
+from .models import GroupOwner, GroupStatsLink, UserProfileLink
 
 
 ROLE_NAMES = [
@@ -60,18 +60,29 @@ COMMAND_LABELS = {
 }
 
 
-def index(request):
-    stats = cache.get('public_index_stats')
-    if not stats:
-        stats = {
-            'users_count': User.objects.filter(profile__isnull=False).count(),
-            'chats_count': Chat.objects.count(),
-            'games_count': Game.objects.count(),
-        }
-        cache.set('public_index_stats', stats, 1800)
+def _active_owner_from_session(request):
+    owner_id = request.session.get('group_owner_id')
+    if not owner_id:
+        return None
+    return GroupOwner.objects.filter(id=owner_id, is_active=True).select_related('chat', 'user').first()
 
-    top_players = Profile.objects.select_related('user').order_by('-wins')[:10]
-    return render(request, 'main/index.html', {'stats': stats, 'top_players': top_players})
+
+def index(request):
+    owner = _active_owner_from_session(request)
+    if owner:
+        return redirect('owner_dashboard')
+
+    error = ""
+    if request.method == 'POST':
+        login = (request.POST.get('login') or '').strip()
+        password = request.POST.get('password') or ''
+        owner = GroupOwner.objects.filter(login=login, is_active=True).select_related('chat', 'user').first()
+        if owner and owner.check_password(password):
+            request.session['group_owner_id'] = owner.id
+            return redirect('owner_dashboard')
+        error = "Login yoki parol noto'g'ri."
+
+    return render(request, 'main/index.html', {'error': error})
 
 
 def generate_group_link(request):
@@ -141,16 +152,11 @@ def _players_score_queryset(players_qs):
     )
 
 
-def group_stats(request, token):
-    link = get_object_or_404(GroupStatsLink, token=token)
-    if link.is_expired():
-        return render(request, 'main/expired.html', {'subject': link.chat}, status=403)
-
-    chat = link.chat
+def _render_group_dashboard(request, chat, owner_access=False):
     section = request.GET.get('section', 'overview')
     if section not in {'overview', 'rating', 'transfers', 'settings'}:
         section = 'overview'
-    if section == 'overview':
+    if section == 'overview' or (not owner_access and section != 'settings'):
         section = 'settings'
 
     try:
@@ -347,6 +353,7 @@ def group_stats(request, token):
         'game_modes': GAME_MODES,
         'command_options': COMMAND_OPTIONS,
         'settings_data': settings_data,
+        'owner_access': owner_access,
         'group_account': {
             'balance': balance_amount,
             'subscription_status': subscription_status,
@@ -357,6 +364,26 @@ def group_stats(request, token):
             'subscription_duration_days': subscription_config.duration_days if subscription_config else 30,
         },
     })
+
+
+def group_stats(request, token):
+    link = get_object_or_404(GroupStatsLink, token=token)
+    if link.is_expired():
+        return render(request, 'main/expired.html', {'subject': link.chat}, status=403)
+
+    return _render_group_dashboard(request, link.chat, owner_access=False)
+
+
+def owner_dashboard(request):
+    owner = _active_owner_from_session(request)
+    if not owner:
+        return redirect('index')
+    return _render_group_dashboard(request, owner.chat, owner_access=True)
+
+
+def owner_logout(request):
+    request.session.pop('group_owner_id', None)
+    return redirect('index')
 
 
 def user_profile(request, token):

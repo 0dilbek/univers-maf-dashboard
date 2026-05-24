@@ -270,16 +270,23 @@
                     <h1>{{ chat.title }}</h1>
                     <div class="muted" style="margin-top:8px">{{ chat.type|title }} | {{ stats_period_label }} statistikasi</div>
                     <nav class="tabs">
+                        {% if owner_access %}
                         <a href="?section=rating&days={{ days }}" class="{% if section == 'rating' %}active{% endif %}">Reyting</a>
                         <a href="?section=transfers&days={{ days }}" class="{% if section == 'transfers' %}active{% endif %}">O'tkazmalar</a>
+                        {% endif %}
                         <a href="?section=settings&days={{ days }}" class="{% if section == 'settings' %}active{% endif %}">Sozlamalar</a>
+                        {% if owner_access %}
+                        <a href="{% url 'owner_logout' %}">Chiqish</a>
+                        {% endif %}
                     </nav>
+                    {% if owner_access %}
                     <nav class="tabs" style="margin-top:10px">
                         <a href="?section={{ section }}&days=1" class="{% if days == 1 %}active{% endif %}">Bugun</a>
                         <a href="?section={{ section }}&days=7" class="{% if days == 7 %}active{% endif %}">Hafta</a>
                         <a href="?section={{ section }}&days=30" class="{% if days == 30 %}active{% endif %}">Oy</a>
                         <a href="?section={{ section }}&days=90" class="{% if days == 90 %}active{% endif %}">90 kun</a>
                     </nav>
+                    {% endif %}
                 </div>
             </div>
 
