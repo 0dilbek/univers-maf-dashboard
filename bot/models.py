@@ -124,6 +124,50 @@ class XCoinPrice(models.Model):
         managed = False
 
 
+class BotErrorLog(models.Model):
+    id = models.BigAutoField(primary_key=True)
+    exception_type = models.CharField(max_length=150)
+    message = models.TextField()
+    short_message = models.CharField(max_length=500, default="", blank=True)
+
+    update_id = models.BigIntegerField(null=True, blank=True)
+    update_type = models.CharField(max_length=50, null=True, blank=True)
+
+    chat_id = models.BigIntegerField(null=True, blank=True)
+    chat_type = models.CharField(max_length=50, null=True, blank=True)
+    chat_title = models.CharField(max_length=255, null=True, blank=True)
+
+    user_id = models.BigIntegerField(null=True, blank=True)
+    username = models.CharField(max_length=255, null=True, blank=True)
+    user_full_name = models.CharField(max_length=255, null=True, blank=True)
+
+    function = models.CharField(max_length=255, null=True, blank=True)
+    file = models.TextField(null=True, blank=True)
+    line = models.IntegerField(null=True, blank=True)
+    code = models.TextField(null=True, blank=True)
+
+    request_text = models.TextField(null=True, blank=True)
+    callback_data = models.TextField(null=True, blank=True)
+    request_summary = models.TextField(null=True, blank=True)
+    request_info = models.TextField(null=True, blank=True)
+    traceback = models.TextField()
+    update_json = models.JSONField(null=True, blank=True)
+    update_repr = models.TextField(null=True, blank=True)
+
+    is_resolved = models.BooleanField(default=False)
+    note = models.TextField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = "bot_error_logs"
+        managed = False
+        ordering = ["-created_at"]
+
+    def __str__(self):
+        return f"{self.exception_type} #{self.id}"
+
+
 class Transfer(models.Model):
     id = models.BigAutoField(primary_key=True)
     from_user = models.ForeignKey(User, related_name="transfers_from", on_delete=models.CASCADE)

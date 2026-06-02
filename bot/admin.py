@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import User, BlockedUser, Profile, ActiveRole, Transfer, VipUser, Para, Geroy, Chat
+from .models import User, BlockedUser, Profile, ActiveRole, Transfer, VipUser, Para, Geroy, Chat, BotErrorLog
 
 
 @admin.register(User)
@@ -58,3 +58,11 @@ class ChatAdmin(admin.ModelAdmin):
     list_display = ('id', 'chat_id', 'title', 'type', 'created_at')
     search_fields = ('title', 'chat_id')
     list_filter = ('type',)
+
+
+@admin.register(BotErrorLog)
+class BotErrorLogAdmin(admin.ModelAdmin):
+    list_display = ('id', 'exception_type', 'short_message', 'user_id', 'chat_id', 'update_type', 'is_resolved', 'created_at')
+    search_fields = ('exception_type', 'message', 'short_message', 'username', 'user_full_name', 'chat_title', 'function', 'file')
+    list_filter = ('is_resolved', 'exception_type', 'update_type', 'chat_type')
+    readonly_fields = ('created_at', 'updated_at')

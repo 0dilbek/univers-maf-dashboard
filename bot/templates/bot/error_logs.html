@@ -1,0 +1,173 @@
+{% extends 'bot/base.html' %}
+{% block title %}Xatolar - MafiaDash{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1><i class="bi bi-bug me-2" style="color:#f44336"></i>Xatolar</h1>
+    <p>Jami {{ errors.paginator.count }} ta log topildi</p>
+</div>
+
+<div class="row g-3 mb-4">
+    <div class="col-12 col-md-4">
+        <div class="stat-card">
+            <div class="value">{{ counters.unresolved }}</div>
+            <div class="label">Ochiq xatolar</div>
+        </div>
+    </div>
+    <div class="col-12 col-md-4">
+        <div class="stat-card">
+            <div class="value">{{ counters.resolved }}</div>
+            <div class="label">Hal qilingan</div>
+        </div>
+    </div>
+    <div class="col-12 col-md-4">
+        <div class="stat-card">
+            <div class="value">{{ counters.total }}</div>
+            <div class="label">Jami loglar</div>
+        </div>
+    </div>
+</div>
+
+<div class="tg-card mb-4" style="padding:14px 16px">
+    <form method="get">
+        <div class="row g-2 align-items-end">
+            <div class="col-12 col-lg-4">
+                <input type="text" name="q" class="tg-search" placeholder="Message, user, chat, funksiya, ID bo'yicha qidirish..." value="{{ query }}">
+            </div>
+            <div class="col-6 col-md-3 col-lg-2">
+                <select name="status" class="tg-search">
+                    <option value="unresolved" {% if status == 'unresolved' %}selected{% endif %}>Ochiq</option>
+                    <option value="resolved" {% if status == 'resolved' %}selected{% endif %}>Hal qilingan</option>
+                    <option value="all" {% if status == 'all' %}selected{% endif %}>Barchasi</option>
+                </select>
+            </div>
+            <div class="col-6 col-md-3 col-lg-2">
+                <select name="exception_type" class="tg-search">
+                    <option value="">Exception</option>
+                    {% for item in exception_types %}
+                    <option value="{{ item }}" {% if exception_type == item %}selected{% endif %}>{{ item }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-6 col-md-3 col-lg-2">
+                <select name="update_type" class="tg-search">
+                    <option value="">Update turi</option>
+                    {% for item in update_types %}
+                    <option value="{{ item }}" {% if update_type == item %}selected{% endif %}>{{ item }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-6 col-md-3 col-lg-2">
+                <select name="chat_type" class="tg-search">
+                    <option value="">Chat turi</option>
+                    {% for item in chat_types %}
+                    <option value="{{ item }}" {% if chat_type == item %}selected{% endif %}>{{ item }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-6 col-md-3 col-lg-2">
+                <input type="date" name="date_from" class="tg-search" value="{{ date_from }}">
+            </div>
+            <div class="col-6 col-md-3 col-lg-2">
+                <input type="date" name="date_to" class="tg-search" value="{{ date_to }}">
+            </div>
+            <div class="col-12 col-md-6 col-lg-3 d-flex gap-2">
+                <button type="submit" class="tg-btn" style="white-space:nowrap"><i class="bi bi-search me-1"></i>Qidirish</button>
+                {% if query or status != 'unresolved' or exception_type or update_type or chat_type or date_from or date_to %}
+                <a href="{% url 'error_logs' %}" class="tg-btn tg-btn-ghost" style="white-space:nowrap">Tozalash</a>
+                {% endif %}
+            </div>
+        </div>
+    </form>
+</div>
+
+<div class="tg-card">
+    <div class="tg-table-wrap"><table class="tg-table" style="min-width:1100px">
+        <thead>
+            <tr>
+                <th>ID</th><th>Holat</th><th>Xato</th><th>Request</th><th>User</th><th>Chat</th><th>Joylashuv</th><th>Vaqt</th><th></th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for error in errors %}
+            <tr>
+                <td style="color:#708499;font-size:0.8rem">#{{ error.id }}</td>
+                <td>
+                    {% if error.is_resolved %}
+                    <span class="tg-badge tg-badge-dollar">Hal qilingan</span>
+                    {% else %}
+                    <span class="tg-badge tg-badge-blocked">Ochiq</span>
+                    {% endif %}
+                </td>
+                <td>
+                    <div style="font-weight:600;color:#f5f5f5">{{ error.exception_type }}</div>
+                    <div style="color:#adb5bd;font-size:0.83rem;max-width:310px">{{ error.short_message|default:error.message|truncatechars:95 }}</div>
+                </td>
+                <td>
+                    {% if error.request_text %}
+                    <div style="color:#d0d9e3;max-width:220px">{{ error.request_text|truncatechars:60 }}</div>
+                    {% elif error.callback_data %}
+                    <code>{{ error.callback_data|truncatechars:60 }}</code>
+                    {% elif error.update_type %}
+                    <span style="color:#708499">{{ error.update_type }}</span>
+                    {% else %}
+                    <span style="color:#708499">—</span>
+                    {% endif %}
+                    {% if error.update_id %}<div style="color:#708499;font-size:0.76rem">update: {{ error.update_id }}</div>{% endif %}
+                </td>
+                <td>
+                    {% if error.user_full_name or error.username or error.user_id %}
+                    <div style="font-weight:500;color:#f5f5f5">{{ error.user_full_name|default:error.username|default:error.user_id|truncatechars:24 }}</div>
+                    {% if error.username %}<div style="color:#708499;font-size:0.76rem">@{{ error.username }}</div>{% endif %}
+                    {% if error.user_id %}<code style="font-size:0.75rem">{{ error.user_id }}</code>{% endif %}
+                    {% else %}
+                    <span style="color:#708499">—</span>
+                    {% endif %}
+                </td>
+                <td>
+                    {% if error.chat_title or error.chat_id %}
+                    <div style="font-weight:500;color:#f5f5f5">{{ error.chat_title|default:error.chat_id|truncatechars:24 }}</div>
+                    {% if error.chat_type %}<div style="color:#708499;font-size:0.76rem">{{ error.chat_type }}</div>{% endif %}
+                    {% if error.chat_id %}<code style="font-size:0.75rem">{{ error.chat_id }}</code>{% endif %}
+                    {% else %}
+                    <span style="color:#708499">—</span>
+                    {% endif %}
+                </td>
+                <td>
+                    {% if error.function %}
+                    <div style="color:#f5f5f5">{{ error.function|truncatechars:30 }}</div>
+                    {% endif %}
+                    <div style="color:#708499;font-size:0.78rem">{{ error.file|truncatechars:36 }}{% if error.line %}:{{ error.line }}{% endif %}</div>
+                </td>
+                <td style="color:#708499;font-size:0.82rem;white-space:nowrap">{{ error.created_at|date:"d.m.Y H:i" }}</td>
+                <td style="white-space:nowrap">
+                    <a href="{% url 'error_log_detail' error.id %}" class="tg-btn tg-btn-sm">
+                        <i class="bi bi-eye me-1"></i>Batafsil
+                    </a>
+                </td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="9" style="text-align:center;color:#708499;padding:32px">Xato loglari topilmadi</td></tr>
+            {% endfor %}
+        </tbody>
+    </table></div>
+</div>
+
+{% if errors.has_other_pages %}
+<div class="tg-pagination">
+    {% if errors.has_previous %}
+    <a class="tg-page-btn" href="?page={{ errors.previous_page_number }}{% if query_string %}&{{ query_string }}{% endif %}"><i class="bi bi-chevron-left"></i></a>
+    {% endif %}
+    {% for num in errors.paginator.page_range %}
+        {% if errors.number == num %}
+        <span class="tg-page-btn active">{{ num }}</span>
+        {% elif num > errors.number|add:'-3' and num < errors.number|add:'3' %}
+        <a class="tg-page-btn" href="?page={{ num }}{% if query_string %}&{{ query_string }}{% endif %}">{{ num }}</a>
+        {% endif %}
+    {% endfor %}
+    {% if errors.has_next %}
+    <a class="tg-page-btn" href="?page={{ errors.next_page_number }}{% if query_string %}&{{ query_string }}{% endif %}"><i class="bi bi-chevron-right"></i></a>
+    {% endif %}
+</div>
+{% endif %}
+{% endblock %}

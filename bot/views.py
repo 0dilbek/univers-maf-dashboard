@@ -2,14 +2,14 @@ from datetime import datetime, time, timedelta
 
 from django.shortcuts import render, get_object_or_404, redirect
 from django.http import JsonResponse
-from django.db.models import Sum, Count, Q, Subquery, OuterRef, CharField
+from django.db.models import Sum, Count, Q, Subquery, OuterRef, CharField, Exists
 from django.db.models.functions import Cast
 from django.core.paginator import Paginator
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.utils import timezone
 
-from .models import User, BlockedUser, Profile, Transfer, VipUser, Para, Geroy, Chat, Giveaway, Game, GamePlayer, GamePhase, DiamondBuyStars, TransferPrice, GroupSubscription
+from .models import User, BlockedUser, Profile, Transfer, VipUser, Para, Geroy, Chat, Giveaway, Game, GamePlayer, GamePhase, DiamondBuyStars, TransferPrice, GroupSubscription, BotErrorLog
 from main.models import GroupOwner
 
 
@@ -244,13 +244,25 @@ def giveaways_list(request):
 def chats_list(request):
     query = request.GET.get('q', '')
     type_filter = request.GET.get('type', '')
-    subscription_expires_sq = GroupSubscription.objects.filter(chat_id=OuterRef('chat_id')).values('expires_at')[:1]
-    chats = Chat.objects.annotate(subscription_expires_at=Subquery(subscription_expires_sq)).order_by('-created_at')
+    subscription_filter = request.GET.get('subscription', '')
+    if subscription_filter not in ('ever', 'active'):
+        subscription_filter = ''
+    now = timezone.now()
+    subscriptions_sq = GroupSubscription.objects.filter(chat_id=OuterRef('chat_id'))
+    subscription_expires_sq = subscriptions_sq.values('expires_at')[:1]
+    chats = Chat.objects.annotate(
+        subscription_expires_at=Subquery(subscription_expires_sq),
+        has_subscription=Exists(subscriptions_sq),
+    ).order_by('-created_at')
 
     if query:
         chats = chats.filter(Q(title__icontains=query) | Q(chat_id__icontains=query))
     if type_filter:
         chats = chats.filter(type=type_filter)
+    if subscription_filter == 'ever':
+        chats = chats.filter(has_subscription=True)
+    elif subscription_filter == 'active':
+        chats = chats.filter(subscription_expires_at__gt=now)
 
     paginator = Paginator(chats, 50)
     page = request.GET.get('page')
@@ -260,8 +272,138 @@ def chats_list(request):
         'chats': chats,
         'query': query,
         'type_filter': type_filter,
-        'now': timezone.now(),
+        'subscription_filter': subscription_filter,
+        'now': now,
     })
+
+
+def _clean_query_string(request, *drop_keys):
+    params = request.GET.copy()
+    for key in ('page', *drop_keys):
+        params.pop(key, None)
+    return params.urlencode()
+
+
+def _distinct_error_values(field, limit=30):
+    return [
+        value for value in
+        BotErrorLog.objects.exclude(**{f"{field}__isnull": True})
+        .exclude(**{field: ""})
+        .values_list(field, flat=True)
+        .distinct()
+        .order_by(field)[:limit]
+    ]
+
+
+@login_required
+def error_logs_list(request):
+    query = request.GET.get('q', '').strip()
+    status = request.GET.get('status', 'unresolved')
+    exception_type = request.GET.get('exception_type', '').strip()
+    update_type = request.GET.get('update_type', '').strip()
+    chat_type = request.GET.get('chat_type', '').strip()
+    date_from = request.GET.get('date_from', '').strip()
+    date_to = request.GET.get('date_to', '').strip()
+
+    errors = BotErrorLog.objects.all().order_by('-created_at')
+
+    if query:
+        errors = errors.annotate(
+            id_text=Cast('id', CharField()),
+            update_id_text=Cast('update_id', CharField()),
+            chat_id_text=Cast('chat_id', CharField()),
+            user_id_text=Cast('user_id', CharField()),
+            line_text=Cast('line', CharField()),
+        ).filter(
+            Q(id_text__icontains=query) |
+            Q(exception_type__icontains=query) |
+            Q(message__icontains=query) |
+            Q(short_message__icontains=query) |
+            Q(update_id_text__icontains=query) |
+            Q(update_type__icontains=query) |
+            Q(chat_id_text__icontains=query) |
+            Q(chat_title__icontains=query) |
+            Q(user_id_text__icontains=query) |
+            Q(username__icontains=query) |
+            Q(user_full_name__icontains=query) |
+            Q(function__icontains=query) |
+            Q(file__icontains=query) |
+            Q(line_text__icontains=query) |
+            Q(request_text__icontains=query) |
+            Q(callback_data__icontains=query) |
+            Q(request_summary__icontains=query) |
+            Q(request_info__icontains=query)
+        )
+
+    if status == 'resolved':
+        errors = errors.filter(is_resolved=True)
+    elif status == 'all':
+        pass
+    else:
+        status = 'unresolved'
+        errors = errors.filter(is_resolved=False)
+
+    if exception_type:
+        errors = errors.filter(exception_type=exception_type)
+    if update_type:
+        errors = errors.filter(update_type=update_type)
+    if chat_type:
+        errors = errors.filter(chat_type=chat_type)
+    if date_from:
+        errors = errors.filter(created_at__date__gte=date_from)
+    if date_to:
+        errors = errors.filter(created_at__date__lte=date_to)
+
+    counters = BotErrorLog.objects.aggregate(
+        total=Count('id'),
+        unresolved=Count('id', filter=Q(is_resolved=False)),
+        resolved=Count('id', filter=Q(is_resolved=True)),
+    )
+
+    paginator = Paginator(errors, 40)
+    page = paginator.get_page(request.GET.get('page'))
+
+    return render(request, 'bot/error_logs.html', {
+        'errors': page,
+        'query': query,
+        'status': status,
+        'exception_type': exception_type,
+        'update_type': update_type,
+        'chat_type': chat_type,
+        'date_from': date_from,
+        'date_to': date_to,
+        'exception_types': _distinct_error_values('exception_type'),
+        'update_types': _distinct_error_values('update_type'),
+        'chat_types': _distinct_error_values('chat_type'),
+        'counters': counters,
+        'query_string': _clean_query_string(request),
+    })
+
+
+@login_required
+def error_log_detail(request, error_id):
+    error = get_object_or_404(BotErrorLog, id=error_id)
+
+    if request.method == 'POST':
+        action = request.POST.get('action', '')
+        note = request.POST.get('note', '').strip()
+        if action == 'resolve':
+            error.is_resolved = True
+            error.note = note
+            error.save(update_fields=['is_resolved', 'note', 'updated_at'])
+            messages.success(request, "Xato hal qilingan deb belgilandi.")
+        elif action == 'reopen':
+            error.is_resolved = False
+            error.note = note
+            error.save(update_fields=['is_resolved', 'note', 'updated_at'])
+            messages.success(request, "Xato qayta ochildi.")
+        elif action == 'note':
+            error.note = note
+            error.save(update_fields=['note', 'updated_at'])
+            messages.success(request, "Izoh saqlandi.")
+        return redirect('error_log_detail', error_id=error.id)
+
+    return render(request, 'bot/error_log_detail.html', {'error': error})
 
 
 @login_required

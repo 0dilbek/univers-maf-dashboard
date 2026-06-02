@@ -12,13 +12,19 @@
         <form class="d-flex gap-2 flex-grow-1" method="get">
             <input type="text" name="q" class="tg-search" placeholder="Nomi yoki Chat ID bo'yicha qidirish..." value="{{ query }}">
             {% if type_filter %}<input type="hidden" name="type" value="{{ type_filter }}">{% endif %}
+            {% if subscription_filter %}<input type="hidden" name="subscription" value="{{ subscription_filter }}">{% endif %}
             <button type="submit" class="tg-btn" style="white-space:nowrap"><i class="bi bi-search me-1"></i>Qidirish</button>
-            {% if query or type_filter %}<a href="{% url 'chats' %}" class="tg-btn tg-btn-ghost" style="white-space:nowrap">Tozalash</a>{% endif %}
+            {% if query or type_filter or subscription_filter %}<a href="{% url 'chats' %}" class="tg-btn tg-btn-ghost" style="white-space:nowrap">Tozalash</a>{% endif %}
         </form>
         <div class="filter-tabs">
-            <a href="{% url 'chats' %}{% if query %}?q={{ query }}{% endif %}" class="filter-tab {% if not type_filter %}active{% endif %}">Barchasi</a>
-            <a href="?type=group{% if query %}&q={{ query }}{% endif %}" class="filter-tab {% if type_filter == 'group' %}active{% endif %}">Guruh</a>
-            <a href="?type=supergroup{% if query %}&q={{ query }}{% endif %}" class="filter-tab {% if type_filter == 'supergroup' %}active{% endif %}">Supergroup</a>
+            <a href="{% url 'chats' %}?{% if query %}q={{ query }}&{% endif %}{% if subscription_filter %}subscription={{ subscription_filter }}{% endif %}" class="filter-tab {% if not type_filter %}active{% endif %}">Barchasi</a>
+            <a href="?type=group{% if query %}&q={{ query }}{% endif %}{% if subscription_filter %}&subscription={{ subscription_filter }}{% endif %}" class="filter-tab {% if type_filter == 'group' %}active{% endif %}">Guruh</a>
+            <a href="?type=supergroup{% if query %}&q={{ query }}{% endif %}{% if subscription_filter %}&subscription={{ subscription_filter }}{% endif %}" class="filter-tab {% if type_filter == 'supergroup' %}active{% endif %}">Supergroup</a>
+        </div>
+        <div class="filter-tabs">
+            <a href="{% url 'chats' %}?{% if query %}q={{ query }}&{% endif %}{% if type_filter %}type={{ type_filter }}{% endif %}" class="filter-tab {% if not subscription_filter %}active{% endif %}">Barcha obunalar</a>
+            <a href="?subscription=ever{% if query %}&q={{ query }}{% endif %}{% if type_filter %}&type={{ type_filter }}{% endif %}" class="filter-tab {% if subscription_filter == 'ever' %}active{% endif %}">Obuna faollashtirgan</a>
+            <a href="?subscription=active{% if query %}&q={{ query }}{% endif %}{% if type_filter %}&type={{ type_filter }}{% endif %}" class="filter-tab {% if subscription_filter == 'active' %}active{% endif %}">Obunasi faol</a>
         </div>
     </div>
 </div>
@@ -88,17 +94,17 @@
 {% if chats.has_other_pages %}
 <div class="tg-pagination">
     {% if chats.has_previous %}
-    <a class="tg-page-btn" href="?page={{ chats.previous_page_number }}{% if query %}&q={{ query }}{% endif %}{% if type_filter %}&type={{ type_filter }}{% endif %}"><i class="bi bi-chevron-left"></i></a>
+    <a class="tg-page-btn" href="?page={{ chats.previous_page_number }}{% if query %}&q={{ query }}{% endif %}{% if type_filter %}&type={{ type_filter }}{% endif %}{% if subscription_filter %}&subscription={{ subscription_filter }}{% endif %}"><i class="bi bi-chevron-left"></i></a>
     {% endif %}
     {% for num in chats.paginator.page_range %}
         {% if chats.number == num %}
         <span class="tg-page-btn active">{{ num }}</span>
         {% elif num > chats.number|add:'-3' and num < chats.number|add:'3' %}
-        <a class="tg-page-btn" href="?page={{ num }}{% if query %}&q={{ query }}{% endif %}{% if type_filter %}&type={{ type_filter }}{% endif %}">{{ num }}</a>
+        <a class="tg-page-btn" href="?page={{ num }}{% if query %}&q={{ query }}{% endif %}{% if type_filter %}&type={{ type_filter }}{% endif %}{% if subscription_filter %}&subscription={{ subscription_filter }}{% endif %}">{{ num }}</a>
         {% endif %}
     {% endfor %}
     {% if chats.has_next %}
-    <a class="tg-page-btn" href="?page={{ chats.next_page_number }}{% if query %}&q={{ query }}{% endif %}{% if type_filter %}&type={{ type_filter }}{% endif %}"><i class="bi bi-chevron-right"></i></a>
+    <a class="tg-page-btn" href="?page={{ chats.next_page_number }}{% if query %}&q={{ query }}{% endif %}{% if type_filter %}&type={{ type_filter }}{% endif %}{% if subscription_filter %}&subscription={{ subscription_filter }}{% endif %}"><i class="bi bi-chevron-right"></i></a>
     {% endif %}
 </div>
 {% endif %}

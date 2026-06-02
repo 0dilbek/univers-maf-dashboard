@@ -360,6 +360,11 @@
             </a>
         </div>
         <div class="nav-item">
+            <a href="{% url 'error_logs' %}" class="nav-link {% if request.resolver_match.url_name == 'error_logs' or request.resolver_match.url_name == 'error_log_detail' %}active{% endif %}">
+                <i class="bi bi-bug"></i> Xatolar
+            </a>
+        </div>
+        <div class="nav-item">
             <a href="{% url 'group_owners' %}" class="nav-link {% if request.resolver_match.url_name == 'group_owners' or request.resolver_match.url_name == 'group_owner_create' or request.resolver_match.url_name == 'group_owner_edit' %}active{% endif %}">
                 <i class="bi bi-person-gear"></i> Group ownerlar
             </a>
