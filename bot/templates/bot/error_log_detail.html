@@ -111,7 +111,7 @@
     <div class="tg-card-header"><span class="title"><i class="bi bi-pencil-square"></i> Izoh va holat</span></div>
     <form method="post" style="padding:16px">
         {% csrf_token %}
-        <textarea name="note" class="tg-search" rows="4" placeholder="Ichki izoh..." style="resize:vertical">{{ error.note }}</textarea>
+        <textarea name="note" class="tg-search" rows="4" placeholder="Ichki izoh..." style="resize:vertical">{{ error.note|default_if_none:"" }}</textarea>
         <div class="d-flex gap-2 flex-wrap mt-3">
             <button type="submit" name="action" value="note" class="tg-btn tg-btn-ghost"><i class="bi bi-save me-1"></i>Izohni saqlash</button>
             {% if error.is_resolved %}

@@ -124,6 +124,24 @@ class XCoinPrice(models.Model):
         managed = False
 
 
+class ShopPrice(models.Model):
+    id = models.BigAutoField(primary_key=True)
+    key = models.CharField(max_length=100, unique=True)
+    label = models.CharField(max_length=150)
+    category = models.CharField(max_length=100)
+    price = models.BigIntegerField()
+    currency = models.CharField(max_length=30)
+    sort_order = models.IntegerField(default=0)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = "shop_prices"
+        managed = False
+
+    def __str__(self):
+        return f"{self.label}: {self.price} {self.currency}"
+
+
 class BotErrorLog(models.Model):
     id = models.BigAutoField(primary_key=True)
     exception_type = models.CharField(max_length=150)

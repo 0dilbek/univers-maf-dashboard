@@ -2,6 +2,7 @@ from datetime import datetime, time, timedelta
 
 from django.shortcuts import render, get_object_or_404, redirect
 from django.http import JsonResponse
+from django.db import transaction
 from django.db.models import Sum, Count, Q, Subquery, OuterRef, CharField, Exists
 from django.db.models.functions import Cast
 from django.core.paginator import Paginator
@@ -9,7 +10,7 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.utils import timezone
 
-from .models import User, BlockedUser, Profile, Transfer, VipUser, Para, Geroy, Chat, Giveaway, Game, GamePlayer, GamePhase, DiamondBuyStars, TransferPrice, GroupSubscription, BotErrorLog
+from .models import User, BlockedUser, Profile, Transfer, VipUser, Para, Geroy, Chat, Giveaway, Game, GamePlayer, GamePhase, DiamondBuyStars, TransferPrice, GroupSubscription, BotErrorLog, ShopPrice, XCoinPrice, StatusesList, SubscriptionConfig
 from main.models import GroupOwner
 
 
@@ -41,6 +42,123 @@ def dashboard(request):
         'recent_transfers': recent_transfers,
     }
     return render(request, 'bot/dashboard.html', context)
+
+
+@login_required
+def shop_prices(request):
+    prices = list(ShopPrice.objects.order_by('category', 'sort_order', 'id'))
+    xcoin_price = XCoinPrice.objects.order_by('id').first()
+    statuses = list(StatusesList.objects.order_by('type', 'id'))
+    subscription_config = SubscriptionConfig.objects.order_by('id').first()
+
+    if request.method == 'POST':
+        errors = []
+        updates = []
+
+        def validate_price(item, field_name, label, update_fields):
+            raw_price = request.POST.get(field_name)
+            if raw_price is None:
+                errors.append(f"{label}: narx yuborilmadi.")
+                return
+
+            normalized = raw_price.strip().replace(' ', '').replace(',', '')
+            try:
+                value = int(normalized)
+            except (TypeError, ValueError):
+                errors.append(f"{label}: butun son kiriting.")
+                return
+
+            if value < 0:
+                errors.append(f"{label}: narx manfiy bo'lishi mumkin emas.")
+                return
+
+            if value != item.price:
+                item.price = value
+                updates.append((item, update_fields))
+
+        for item in prices:
+            validate_price(item, f'price_{item.id}', item.label, ['price', 'updated_at'])
+
+        if xcoin_price:
+            validate_price(xcoin_price, 'xcoin_price', 'XCoin almashuv narxi', ['price', 'updated_at'])
+
+        for status in statuses:
+            validate_price(
+                status,
+                f'status_price_{status.id}',
+                f'Status (tur {status.type}, emoji {status.emoji_id})',
+                ['price', 'updated_at'],
+            )
+
+        if subscription_config:
+            validate_price(
+                subscription_config,
+                'subscription_price',
+                'Guruh obunasi',
+                ['price'],
+            )
+
+        if errors:
+            for error in errors:
+                messages.error(request, error)
+        else:
+            if updates:
+                with transaction.atomic():
+                    for item, update_fields in updates:
+                        item.save(update_fields=update_fields)
+                messages.success(request, f"{len(updates)} ta narx yangilandi.")
+            else:
+                messages.info(request, "Narxlarda o'zgarish yo'q.")
+            return redirect('shop_prices')
+
+    grouped_prices = []
+    for item in prices:
+        if not grouped_prices or grouped_prices[-1]['name'] != item.category:
+            grouped_prices.append({'name': item.category, 'items': []})
+        grouped_prices[-1]['items'].append(item)
+
+    system_price_groups = []
+    if xcoin_price:
+        system_price_groups.append({
+            'name': 'XCoin',
+            'items': [{
+                'field_name': 'xcoin_price',
+                'label': 'XCoin almashuv narxi',
+                'key': 'xcoinprice:first',
+                'price': xcoin_price.price,
+                'currency': 'almashuv nisbati',
+                'meta': 'Birinchi XCoinPrice yozuvi',
+            }],
+        })
+    if statuses:
+        system_price_groups.append({
+            'name': 'Statuslar',
+            'items': [{
+                'field_name': f'status_price_{status.id}',
+                'label': f'Status · tur {status.type}',
+                'key': status.emoji_id,
+                'price': status.price,
+                'currency': '💎 olmos',
+                'meta': f'ID: {status.id}',
+            } for status in statuses],
+        })
+    if subscription_config:
+        system_price_groups.append({
+            'name': 'Guruh obunasi',
+            'items': [{
+                'field_name': 'subscription_price',
+                'label': 'Premium guruh obunasi',
+                'key': 'subscription_config:first',
+                'price': subscription_config.price,
+                'currency': '💎 olmos',
+                'meta': f'{subscription_config.duration_days} kun (davomiylik faqat ko\'rish uchun)',
+            }],
+        })
+
+    return render(request, 'bot/shop_prices.html', {
+        'price_groups': grouped_prices,
+        'system_price_groups': system_price_groups,
+    })
 
 
 @login_required
