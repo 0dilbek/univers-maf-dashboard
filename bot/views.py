@@ -10,7 +10,7 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.utils import timezone
 
-from .models import User, BlockedUser, Profile, Transfer, VipUser, Para, Geroy, Chat, Giveaway, Game, GamePlayer, GamePhase, DiamondBuyStars, TransferPrice, GroupSubscription, BotErrorLog, ShopPrice, XCoinPrice, StatusesList, SubscriptionConfig
+from .models import User, BlockedUser, Profile, Transfer, VipUser, Para, Geroy, Chat, Giveaway, Game, GamePlayer, GamePhase, DiamondBuyStars, TransferPrice, GroupSubscription, BotErrorLog, ShopPrice, XCoinPrice, SubscriptionConfig
 from main.models import GroupOwner
 
 
@@ -48,7 +48,6 @@ def dashboard(request):
 def shop_prices(request):
     prices = list(ShopPrice.objects.order_by('category', 'sort_order', 'id'))
     xcoin_price = XCoinPrice.objects.order_by('id').first()
-    statuses = list(StatusesList.objects.order_by('type', 'id'))
     subscription_config = SubscriptionConfig.objects.order_by('id').first()
 
     if request.method == 'POST':
@@ -81,14 +80,6 @@ def shop_prices(request):
 
         if xcoin_price:
             validate_price(xcoin_price, 'xcoin_price', 'XCoin almashuv narxi', ['price', 'updated_at'])
-
-        for status in statuses:
-            validate_price(
-                status,
-                f'status_price_{status.id}',
-                f'Status (tur {status.type}, emoji {status.emoji_id})',
-                ['price', 'updated_at'],
-            )
 
         if subscription_config:
             validate_price(
@@ -124,23 +115,10 @@ def shop_prices(request):
             'items': [{
                 'field_name': 'xcoin_price',
                 'label': 'XCoin almashuv narxi',
-                'key': 'xcoinprice:first',
                 'price': xcoin_price.price,
                 'currency': 'almashuv nisbati',
-                'meta': 'Birinchi XCoinPrice yozuvi',
+                'meta': '1 ta XCoin uchun olmos miqdori',
             }],
-        })
-    if statuses:
-        system_price_groups.append({
-            'name': 'Statuslar',
-            'items': [{
-                'field_name': f'status_price_{status.id}',
-                'label': f'Status · tur {status.type}',
-                'key': status.emoji_id,
-                'price': status.price,
-                'currency': '💎 olmos',
-                'meta': f'ID: {status.id}',
-            } for status in statuses],
         })
     if subscription_config:
         system_price_groups.append({
@@ -148,7 +126,6 @@ def shop_prices(request):
             'items': [{
                 'field_name': 'subscription_price',
                 'label': 'Premium guruh obunasi',
-                'key': 'subscription_config:first',
                 'price': subscription_config.price,
                 'currency': '💎 olmos',
                 'meta': f'{subscription_config.duration_days} kun (davomiylik faqat ko\'rish uchun)',
